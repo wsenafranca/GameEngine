@@ -50,4 +50,5 @@ target_link_libraries(GameEngine OpenCL::OpenCL)
 
 include_directories(${PROJECT_SOURCE_DIR}/libs/glm/include)
 include_directories(${PROJECT_SOURCE_DIR}/libs/stb/include)
-include_directories(libs/rapidjson/include)
+include_directories(${PROJECT_SOURCE_DIR}/libs/rapidjson/include)
+include_directories(${PROJECT_SOURCE_DIR}/libs/boost/include)

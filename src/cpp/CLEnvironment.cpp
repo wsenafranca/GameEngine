@@ -1,10 +1,12 @@
 #include "CLEnvironment.h"
 #include <string>
 #include <fstream>
+#include <OpenGL.h>
+#include <iostream>
 
 CLEnvironment CLEnvironment::instance = CLEnvironment();
 
-CLEnvironment::CLEnvironment() {
+CLEnvironment::CLEnvironment() : ev(nullptr) {
 
 }
 
@@ -64,4 +66,39 @@ cl::Buffer CLEnvironment::createBuffer(cl_mem_flags flags, size_t size, void *ho
 
 cl::BufferGL CLEnvironment::createBufferGL(cl_mem_flags flags, cl_GLuint vbo, cl_int *err) {
 	return cl::BufferGL(*instance.mContext, flags, vbo, err);
+}
+
+void CLEnvironment::lockBuffer(cl::BufferGL &buffer) {
+	instance.ev = new cl::Event();
+	glFinish();
+
+	instance.objs.clear();
+	instance.objs.push_back(buffer);
+
+	cl_int res = queue().enqueueAcquireGLObjects(&instance.objs, NULL, instance.ev);
+	if (res!=CL_SUCCESS) {
+		std::cerr << res << "\n";
+		throw std::runtime_error("Failed acquiring GL object.");
+	}
+	instance.ev->wait();
+}
+
+void CLEnvironment::unlockBuffer() {
+	cl_int res = queue().enqueueReleaseGLObjects(&instance.objs);
+	instance.ev->wait();
+
+	if (res!=CL_SUCCESS) {
+		std::cerr << res << "\n";
+		throw std::runtime_error("Failed releasing GL object.");
+	}
+
+	queue().finish();
+	delete instance.ev;
+	instance.ev = nullptr;
+}
+
+
+void CLEnvironment::sync() {
+	if(instance.ev) instance.ev->wait();
+	queue().finish();
 }

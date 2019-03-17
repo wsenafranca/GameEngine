@@ -15,23 +15,34 @@ class MyApplication : public Application {
 	void onCreate() {
 		renderer = new BlurRenderer();
 
-		scene = new Scene(ActorManager::factory()->create<ParticleEmitter>("particles"));
-		auto particles = ActorManager::factory()->find<ParticleEmitter>("particles");
-		particles->load("data/rain.json");
+		auto root = ActorManager::factory()->create<Actor>("root");
+		root->add(ActorManager::factory()->create<ParticleEmitter>("katamari"));
+		root->add(ActorManager::factory()->create<ParticleEmitter>("hexagon"));
+		root->add(ActorManager::factory()->create<ParticleEmitter>("mana"));
+		scene = new Scene(root);
 
 		loadShaders();
 
 		//projection = glm::perspective(45.0f, 800.0f / 600.0f, 0.1f, 2000.0f);
-		projection = glm::ortho(-800.0f, 800.0f, -600.0f, 600.0f);
-
-		eye = glm::vec3(0.0f, 0.0f, 1.0f);
+		zoom = 2.0f;
+		projection = glm::ortho(zoom*-400.0f, zoom*400.0f, zoom*-300.0f, zoom*300.0f);
+		view = glm::mat4(1.0f);
 
 		window()->addMouseButtonListener([this](int button, int action, int mods, int x, int y){
 			glm::vec3 p = glm::unProject(glm::vec3((float)x, 600.0f-y, 0.0f), view, projection, glm::vec4(0.0f, 0.0f, 800.0f, 600.0f));
-			auto particles = ActorManager::factory()->find<ParticleEmitter>("particles");
+			auto particles = ActorManager::factory()->find<ParticleEmitter>("mana");
 			printf("%s\n", particles->name().c_str());
-			particles->position.x = p.x;
-			particles->position.y = p.y;
+			particles->data.position[0] = p.x;
+			particles->data.position[1] = p.y;
+		});
+		window()->addKeyListener([this](int key, int scancode, int action, int mods){
+			if(action != 0 && key == GLFW_KEY_W) {
+				zoom-=0.1f;
+			}
+			if(action != 0 && key == GLFW_KEY_S) {
+				zoom+=0.1f;
+			}
+			projection = glm::ortho(zoom*-400.0f, zoom*400.0f, zoom*-300.0f, zoom*300.0f);
 		});
 
 		glShadeModel(GL_SMOOTH);
@@ -39,8 +50,7 @@ class MyApplication : public Application {
 		glCullFace(GL_FRONT);
 	}
 
-	void onUpdate(float delta) {		
-		view = glm::mat4(1.0f);//glm::lookAt(eye, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	void onUpdate(float delta) {
 		scene->update(delta);
 	}
 
@@ -70,7 +80,7 @@ class MyApplication : public Application {
 	BlurRenderer *renderer;
 	
 	glm::mat4 view, projection;
-	glm::vec3 eye;
+	float zoom;
 };
 
 int main() {

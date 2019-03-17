@@ -12,7 +12,6 @@ class Actor;
 
 class Actor : public std::enable_shared_from_this<Actor> {
 public:
-	virtual ~Actor();
 	void create();
 	void update(float dt);
 	void render(Shader &shader);
@@ -43,6 +42,7 @@ public:
 
 protected:
 	Actor();
+	virtual ~Actor();
 	virtual void onCreate();
 	virtual void onUpdate(float dt);
 	virtual void onRender(Shader &shader);

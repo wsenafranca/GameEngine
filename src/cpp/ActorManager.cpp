@@ -18,8 +18,9 @@ void ActorManager::destroy(const Actor* ptr) {
 }
 
 void ActorManager::cleanup() {
-	for(auto &it : actors) {
-		delete it.second;
+	for(auto it : actors) {
+		Actor *a = it.second;
+		delete a;
 	}
 }
 

@@ -33,7 +33,7 @@ MainWindow::MainWindow(const std::string &title, int width, int height, bool ful
 
     setupOpenCL();
 
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_ALWAYS);

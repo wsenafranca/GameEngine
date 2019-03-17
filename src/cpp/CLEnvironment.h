@@ -1,10 +1,18 @@
 #ifndef CL_ENVIRONMENT_H
 #define CL_ENVIRONMENT_H
 
-#define __CL_ENABLE_EXCEPTIONS
+//#define __CL_ENABLE_EXCEPTIONS
 #include <CL/cl.hpp>
 #include <vector>
 #include <map>
+#include <stdexcept>
+#include <string>
+
+inline static void CL_SAFE_RUN(int x) {
+	if(x < 0) {
+		throw std::runtime_error("CL "+std::to_string(x));
+	}
+}
 
 class CLEnvironment {
 public:
@@ -27,6 +35,11 @@ public:
 	static cl::Buffer createBuffer(cl_mem_flags flags, size_t size, void *hostPtr = nullptr, cl_int *err = nullptr);
 	static cl::BufferGL createBufferGL(cl_mem_flags flags, cl_GLuint vbo, cl_int *err = nullptr);
 
+	static void lockBuffer(cl::BufferGL &buffer);
+	static void unlockBuffer();
+
+	static void sync();
+
 private:
 	static CLEnvironment instance;
 
@@ -36,6 +49,8 @@ private:
 	std::map<std::string, cl::Program> mPrograms;
 	cl::Program::Sources mSources;
 	cl::CommandQueue mQueue;
+	cl::Event *ev;
+	std::vector<cl::Memory> objs;
 };
 
 #endif

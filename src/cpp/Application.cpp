@@ -13,9 +13,6 @@ Application::~Application() {
 }
 
 void Application::create() {
-	last = glfwGetTime();
-	time = 0.0f;
-	fps = 0;
 	sApp = this;
 	mWindow = new MainWindow("MainWindow", 800, 600, false);
 	onCreate();
@@ -53,6 +50,9 @@ void Application::destroy() {
 
 void Application::exec() {
 	create();
+	last = glfwGetTime();
+	time = 0.0f;
+	fps = 0;
 	while(!mWindow->shouldClose()) {
 		std::unique_lock<std::mutex> lock(mutex);
 		update();
