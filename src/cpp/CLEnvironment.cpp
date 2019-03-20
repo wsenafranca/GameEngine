@@ -6,7 +6,7 @@
 
 CLEnvironment CLEnvironment::instance = CLEnvironment();
 
-CLEnvironment::CLEnvironment() : ev(nullptr) {
+CLEnvironment::CLEnvironment() {
 
 }
 
@@ -18,10 +18,11 @@ void CLEnvironment::setup(const cl::Platform &platform, const cl::Device &device
 	instance.mPlatform = platform;
 	instance.mDevice = device;
 	instance.mContext = context;
-	instance.mQueue = cl::CommandQueue(*context, device);
+	instance.mQueue = createQueue();
 }
 
 cl::Program CLEnvironment::loadProgram(const char *filename) {
+	std::unique_lock<std::mutex> lock(instance.mutexKernel);
 	auto it = instance.mPrograms.find(filename);
 	if(it == instance.mPrograms.end()) {
 		std::string kernelCode;
@@ -68,37 +69,68 @@ cl::BufferGL CLEnvironment::createBufferGL(cl_mem_flags flags, cl_GLuint vbo, cl
 	return cl::BufferGL(*instance.mContext, flags, vbo, err);
 }
 
+cl::CommandQueue CLEnvironment::createQueue() {
+	return cl::CommandQueue(*(instance.mContext), instance.mDevice);
+}
+
 void CLEnvironment::lockBuffer(cl::BufferGL &buffer) {
-	instance.ev = new cl::Event();
-	glFinish();
+	lockBuffer(buffer, &instance.mQueue);
+}
 
-	instance.objs.clear();
-	instance.objs.push_back(buffer);
+void CLEnvironment::lockBuffer(cl::BufferGL &buffer, cl::CommandQueue *q) {
+	clBlock block;
+	{
+		std::unique_lock<std::mutex> lock(instance.mutex);
+		block = instance.blocks[q];
+	}
+	block.ev = new cl::Event();
 
-	cl_int res = queue().enqueueAcquireGLObjects(&instance.objs, NULL, instance.ev);
+	block.objs.clear();
+	block.objs.push_back(buffer);
+
+	cl_int res = q->enqueueAcquireGLObjects(&block.objs, NULL, block.ev);
 	if (res!=CL_SUCCESS) {
 		std::cerr << res << "\n";
 		throw std::runtime_error("Failed acquiring GL object.");
 	}
-	instance.ev->wait();
+	block.ev->wait();
 }
 
 void CLEnvironment::unlockBuffer() {
-	cl_int res = queue().enqueueReleaseGLObjects(&instance.objs);
-	instance.ev->wait();
+	unlockBuffer(&instance.mQueue);
+}
+
+void CLEnvironment::unlockBuffer(cl::CommandQueue *q) {
+	clBlock block;
+	{
+		std::unique_lock<std::mutex> lock(instance.mutex);
+		block = instance.blocks[q];
+	}
+	cl_int res = q->enqueueReleaseGLObjects(&block.objs);
+	block.ev->wait();
 
 	if (res!=CL_SUCCESS) {
 		std::cerr << res << "\n";
 		throw std::runtime_error("Failed releasing GL object.");
 	}
 
-	queue().finish();
-	delete instance.ev;
-	instance.ev = nullptr;
+	q->finish();
+	delete block.ev;
+	block.ev = nullptr;
 }
 
-
 void CLEnvironment::sync() {
-	if(instance.ev) instance.ev->wait();
-	queue().finish();
+	sync(&instance.mQueue);
+}
+
+void CLEnvironment::sync(cl::CommandQueue *q) {
+	/*
+	clBlock block;
+	{
+		std::unique_lock<std::mutex> lock(instance.mutex);
+		block = instance.blocks[q];
+	}
+	if(block.ev) block.ev->wait();
+	*/
+	q->finish();
 }

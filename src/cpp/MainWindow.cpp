@@ -33,11 +33,12 @@ MainWindow::MainWindow(const std::string &title, int width, int height, bool ful
 
     setupOpenCL();
 
-    glfwSwapInterval(0);
+    glfwSwapInterval(1);
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_ALWAYS);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glfwSetInputMode(window, GLFW_STICKY_KEYS, 1);
 }
 
 MainWindow::~MainWindow() {
@@ -68,6 +69,18 @@ const std::string& MainWindow::title() const {
 void MainWindow::title(const std::string &title) {
     mTitle = title;
     glfwSetWindowTitle(window, mTitle.c_str());
+}
+
+unsigned int MainWindow::width() const {
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    return width;
+}
+
+unsigned int MainWindow::height() const {
+    int width, height;
+    glfwGetWindowSize(window, &width, &height);
+    return height;
 }
 
 void MainWindow::addKeyListener(const KeyListener &listener) {

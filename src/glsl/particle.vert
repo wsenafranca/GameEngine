@@ -1,6 +1,6 @@
 #version 330 core
 
-uniform mat4 u_view, u_projection;
+uniform mat4 u_MVP;
 
 layout (location = 0) in vec2 a_vertex;
 layout (location = 1) in vec4 a_transforms;
@@ -38,9 +38,8 @@ void main(void)
 {
 	vec4 v = vec4(a_vertex, 0.0f, 1.0f);
 	vec4 v1 = v * model(a_transforms);
-	vec4 v2 = u_view * v1;
-	vec4 v3 = u_projection * v2;
-	gl_Position = v3;
+	vec4 v2 = u_MVP * v1;
+	gl_Position = v2;
 	f_texcoord = vec2(0.5 + a_vertex.x, 0.5f-a_vertex.y);
 	f_color = a_color;
 }

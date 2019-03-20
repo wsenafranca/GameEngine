@@ -7,18 +7,25 @@ add_definitions(-DCMAKE_CXX_FLAGS=-Wa)
 
 set(CPP_DIR src/cpp)
 set(CPP_SRC
+		src/cpp/Bundle.cpp
+		src/cpp/LuaManager.cpp
+		src/cpp/Component.cpp
+		src/cpp/LuaScript.cpp
+		src/cpp/SpriteRenderer.cpp
+		src/cpp/Node.cpp
+		src/cpp/Sprite.cpp
 		src/cpp/BlendFunc.cpp
 		src/cpp/RandomNumberGenerator.cpp
 		src/cpp/DispatchQueue.cpp
 		src/cpp/CLEnvironment.cpp
 		src/cpp/MainWindow.cpp
 		src/cpp/Application.cpp
-		src/cpp/ActorManager.cpp
-		src/cpp/Actor.cpp
+		src/cpp/Camera.cpp
 		src/cpp/Scene.cpp
 		src/cpp/Particle.cpp
 		src/cpp/ParticleEmitter.cpp
-		src/cpp/BlurRenderer.cpp
+		src/cpp/ParticleSystem.cpp
+		#src/cpp/BlurRenderer.cpp
 		src/cpp/Shader.cpp
 		src/cpp/Buffer.cpp
 		src/cpp/TextureManager.cpp
@@ -48,7 +55,12 @@ target_link_libraries(GameEngine ${CMAKE_THREAD_LIBS_INIT})
 find_package(OpenCL REQUIRED)
 target_link_libraries(GameEngine OpenCL::OpenCL)
 
+set(LUA_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/libs/lua/include)
+include_directories(${LUA_INCLUDE_DIR})
+set(LUA_LIBRARY ${PROJECT_SOURCE_DIR}/libs/lua/lib/liblua52.a)
+target_link_libraries(GameEngine ${LUA_LIBRARY})
+
 include_directories(${PROJECT_SOURCE_DIR}/libs/glm/include)
 include_directories(${PROJECT_SOURCE_DIR}/libs/stb/include)
 include_directories(${PROJECT_SOURCE_DIR}/libs/rapidjson/include)
-include_directories(${PROJECT_SOURCE_DIR}/libs/boost/include)
+include_directories(${PROJECT_SOURCE_DIR}/libs/sol/include)

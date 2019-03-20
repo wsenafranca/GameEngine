@@ -1,6 +1,7 @@
 #include "Application.h"
 #include <DispatchQueue.h>
-#include <ActorManager.h>
+#include <ParticleSystem.h>
+#include <LuaManager.h>
 
 Application* Application::sApp = nullptr;
 
@@ -15,6 +16,9 @@ Application::~Application() {
 void Application::create() {
 	sApp = this;
 	mWindow = new MainWindow("MainWindow", 800, 600, false);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	ParticleSystem::instance()->init();
+	LuaManager::init();
 	onCreate();
 }
 
@@ -35,15 +39,14 @@ void Application::update() {
 
 	DispatchQueue::main()->poll();
 	mWindow->pollEvents();
-	onUpdate(dt);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	onRender();
+	onUpdate(dt);
 	mWindow->swapBuffers();
 }
 
 void Application::destroy() {
 	onDestroy();
-	ActorManager::factory()->cleanup();
+	ParticleSystem::instance()->destroy();
 	delete mWindow;
 	sApp = nullptr;
 }
@@ -82,10 +85,6 @@ void Application::onCreate() {
 }
 
 void Application::onUpdate(float delta) {
-
-}
-
-void Application::onRender() {
 
 }
 

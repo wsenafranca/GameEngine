@@ -7,12 +7,19 @@
 #include <map>
 #include <stdexcept>
 #include <string>
+#include <mutex>
 
 inline static void CL_SAFE_RUN(int x) {
 	if(x < 0) {
 		throw std::runtime_error("CL "+std::to_string(x));
 	}
 }
+
+struct clBlock {
+	clBlock() : ev(nullptr) {}
+	std::vector<cl::Memory> objs;
+	cl::Event *ev;
+};
 
 class CLEnvironment {
 public:
@@ -35,10 +42,15 @@ public:
 	static cl::Buffer createBuffer(cl_mem_flags flags, size_t size, void *hostPtr = nullptr, cl_int *err = nullptr);
 	static cl::BufferGL createBufferGL(cl_mem_flags flags, cl_GLuint vbo, cl_int *err = nullptr);
 
+	static cl::CommandQueue createQueue();
+
 	static void lockBuffer(cl::BufferGL &buffer);
+	static void lockBuffer(cl::BufferGL &buffer, cl::CommandQueue *q);
 	static void unlockBuffer();
+	static void unlockBuffer(cl::CommandQueue *q);
 
 	static void sync();
+	static void sync(cl::CommandQueue *q);
 
 private:
 	static CLEnvironment instance;
@@ -49,8 +61,8 @@ private:
 	std::map<std::string, cl::Program> mPrograms;
 	cl::Program::Sources mSources;
 	cl::CommandQueue mQueue;
-	cl::Event *ev;
-	std::vector<cl::Memory> objs;
+	std::map<cl::CommandQueue*, clBlock> blocks;
+	std::mutex mutex, mutexKernel;
 };
 
 #endif

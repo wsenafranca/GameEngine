@@ -24,9 +24,16 @@ public:
 	const std::string& title() const;
 	void title(const std::string &title);
 
+	unsigned int width() const;
+	unsigned int height() const;
+
 	void addKeyListener(const KeyListener &listener);
 	void addWindowResizeListener(const WindowResizeListener &listener);
 	void addMouseButtonListener(const MouseButtonListener &listener);
+
+	operator GLFWwindow*() {
+		return this->window;
+	}
 private:
 	void setupOpenCL();
 
@@ -35,8 +42,8 @@ private:
 	static void windowSizeCallback(GLFWwindow *window, int width, int height);
 	static void mouseButtonCallback(GLFWwindow *window, int button, int action, int mods);
 
-	GLFWwindow *window;
 	std::string mTitle;
+	GLFWwindow *window;
 
 	std::list<KeyListener> keyListeners;
 	std::list<WindowResizeListener> windowResizeListeners;

@@ -19,7 +19,6 @@ public:
 protected:
 	virtual void onCreate();
 	virtual void onUpdate(float delta);
-	virtual void onRender();
 	virtual void onDestroy();
 
 private:

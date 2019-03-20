@@ -28,7 +28,6 @@ ParticleData::ParticleData() :
 	positionType(ParticlePositionType::FREE),
 	sourcePositionCompatible(true)
 {
-	position[0] = position[1] = 0.0f;
 	startColor[0] = startColor[1] = startColor[2] = startColor[3] = 0.0f;
 	startColorVar[0] = startColorVar[1] = startColorVar[2] = startColorVar[3] = 0.0f;
 	endColor[0] = endColor[1] = endColor[2] = endColor[3] = 0.0f;

@@ -1,20 +1,12 @@
 #ifndef SCENE_H
 #define SCENE_H
 
-#include <Actor.h>
+#include <Node.h>
 
-class Scene {
+class Scene : public Node {
 public:
-	Scene(Actor* root);
-	virtual ~Scene();
-	void update(float delta);
-	void render(Shader &shader);
-	template<class T>
-	T* root() {
-		return mRoot ? mRoot->as<T>() : nullptr;
-	}
-private:
-	Actor *mRoot;
+	void run(float dt);
+	void onCreate();
 };
 
 #endif

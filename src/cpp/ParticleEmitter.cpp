@@ -2,8 +2,6 @@
 #include <OpenGL.h>
 #include <iostream>
 #include <glm/glm.hpp>
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/vector_angle.hpp>
 #include <algorithm>
 #include <RandomNumberGenerator.h>
 #include <sstream>
@@ -12,14 +10,18 @@
 #include <TextureManager.h>
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
+#include <ParticleSystem.h>
 
 #define CHECK_JSON(document, key, ret, def) document.HasMember(key) ? document[key].ret() : def
 
-ParticleEmitter::ParticleEmitter() : isTranformSystemDirty(false),
-									 isActive(true),
-									 paused(false),
-									 blendFunc(BlendFunc::ALPHA_PREMULTIPLIED),
-								 	 texture(0) { }
+ParticleEmitter::ParticleEmitter(const std::string &name) :  isTranformSystemDirty(false),
+															 isActive(true),
+															 paused(false),
+															 blendFunc(BlendFunc::ALPHA_PREMULTIPLIED),
+														 	 texture(0) 
+{
+	this->name(name);
+}
 
 void ParticleEmitter::load(const std::string &filename) {
 	std::string json;
@@ -133,57 +135,15 @@ void ParticleEmitter::load(const std::string &filename) {
 	}
 }
 
-void ParticleEmitter::shrink() {
-	if(data.particleCount == 0) return;
-
-	Particle *temp = (Particle*) malloc(sizeof(Particle)*data.particleCount);
-	CLEnvironment::queue().enqueueReadBuffer(particles, CL_TRUE, 0, sizeof(Particle)*data.particleCount, temp);
-	CLEnvironment::sync();
-	auto it = std::partition(temp, temp + data.particleCount, [](const Particle &p){
-		return p.timeToLive > 0.0f;
-	});
-	data.particleCount = std::max(0, int(it - temp));
-	CLEnvironment::queue().enqueueWriteBuffer(particles, CL_TRUE, 0, sizeof(Particle)*data.particleCount, temp);
-	CLEnvironment::sync();
-	free(temp);
-}
-
-void ParticleEmitter::addParticles(unsigned int count) {
-	if(paused) return;
-
-	if(count > 0) {
-		kAddParticles.setArg(0, particles);
-		kAddParticles.setArg(1, randomSeeds);
-		kAddParticles.setArg(2, data);
-		kAddParticles.setArg(3, data.particleCount);
-		CL_SAFE_RUN(CLEnvironment::queue().enqueueNDRangeKernel(kAddParticles, cl::NullRange, cl::NDRange(count)));
-		CLEnvironment::sync();
-	}
-	data.particleCount += count;
-}
-
 void ParticleEmitter::onCreate() {
 	load("data/"+name()+".json");
 
-	static const GLfloat vertices[] = {
-		-0.5f,  0.5f,
-		 0.5f,  0.5f,
-		-0.5f, -0.5f,
-		 0.5f, -0.5f
-	};
-
-	glGenBuffers(2, vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+	glGenBuffers(1, &vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Particle)*data.totalParticles, 0, GL_DYNAMIC_DRAW);
-	particles = CLEnvironment::createBufferGL(CL_MEM_READ_WRITE, vbo[1]);
-	CLEnvironment::sync();
-
-	kAddParticles = CLEnvironment::getKernel("opencl/particles.opencl", "addParticles");
-	kUpdate = CLEnvironment::getKernel("opencl/particles.opencl", "update");
-	kSimulate = CLEnvironment::getKernel("opencl/particles.opencl", "simulate");
+	queue = CLEnvironment::createQueue();
+	particles = CLEnvironment::createBufferGL(CL_MEM_READ_WRITE, vbo);
+	CLEnvironment::sync(&queue);
 
 	unsigned int *seeds = (unsigned int*) malloc(sizeof(unsigned int) * data.totalParticles);
 	for(unsigned int i = 0; i < data.totalParticles; i++) {
@@ -191,98 +151,44 @@ void ParticleEmitter::onCreate() {
 	}
 	randomSeeds = CLEnvironment::createBuffer(CL_MEM_READ_WRITE, sizeof(unsigned int) * data.totalParticles, seeds);
 	free(seeds);
-	CLEnvironment::sync();
+	CLEnvironment::sync(&queue);
 
-	std::cout << "Created\n";
+	kAddParticles = CLEnvironment::getKernel("opencl/particles.opencl", "addParticles");
+	kUpdate = CLEnvironment::getKernel("opencl/particles.opencl", "update");
+	kSimulate = CLEnvironment::getKernel("opencl/particles.opencl", "simulate");
+}
+
+void ParticleEmitter::onPreUpdate(float dt) {
+	
 }
 
 void ParticleEmitter::onUpdate(float dt) {
 	if(!isActive || !data.emissionRate) return;
 
-	float rate = 1.0f / data.emissionRate;
-	if(data.particleCount < data.totalParticles) {
-		data.emitCounter += dt;
-		if(data.emitCounter < 0.0f)
-			data.emitCounter = 0.0f;
+	if(data.positionType == ParticlePositionType::FREE) {
+		glm::vec4 v = transform()*glm::vec4(position().x, position().y, 0.0f, 1.0f);
+		data.position.x = v.x;
+		data.position.y = v.y;
 	}
-
-	int emitCount = std::min(data.totalParticles - data.particleCount, (int)trunc(data.emitCounter / rate));
-
-	CLEnvironment::lockBuffer(particles);
-
-	addParticles(emitCount);
-
-	data.emitCounter -= rate*emitCount;
-	data.elapsed += dt;
-	if(data.elapsed < 0.0f)
-		data.elapsed = 0.0f;
-	if(data.duration != -1 && data.duration < data.elapsed) {
-		// TODO
-		//stop();
-		CLEnvironment::unlockBuffer();
-		return;
+	else {
+		data.position = position();
 	}
-
-	if(data.particleCount > 0) {
-		kUpdate.setArg(0, particles);
-		kUpdate.setArg(1, dt);
-		CL_SAFE_RUN(CLEnvironment::queue().enqueueNDRangeKernel(kUpdate, cl::NullRange, cl::NDRange(data.particleCount), cl::NullRange));
-		CLEnvironment::sync();
-	}
-
-	shrink();
-
-	if(data.particleCount > 0) {
-		kSimulate.setArg(0, particles);
-		kSimulate.setArg(1, data);
-		kSimulate.setArg(2, dt);
-		CL_SAFE_RUN(CLEnvironment::queue().enqueueNDRangeKernel(kSimulate, cl::NullRange, cl::NDRange(data.particleCount), cl::NullRange));
-		CLEnvironment::sync();
-	}
-
-	CLEnvironment::unlockBuffer();
+	ParticleSystem::instance()->update(this, dt);
+	
 
 	isTranformSystemDirty = false;
 }
 
-void ParticleEmitter::onRender(Shader &shader) {
-	glEnable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glUniform1i(glGetUniformLocation(shader, "u_enableTexture"), texture);
-	
-	glEnable(GL_BLEND);
-	glBlendFuncSeparate(blendFunc.src, blendFunc.dst, blendFunc.src, blendFunc.dst);
-	
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);	
-	glEnableVertexAttribArray(2);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)0);
-	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)(sizeof(GLfloat)*4));
-
-	glVertexAttribDivisor(0, 0);
-	glVertexAttribDivisor(1, 1);
-	glVertexAttribDivisor(2, 1);
-
-	glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, data.particleCount);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(2);
-
-	glBlendFuncSeparate(BlendFunc::DISABLE.src, BlendFunc::DISABLE.dst, BlendFunc::DISABLE.src, BlendFunc::DISABLE.dst);
-	glDisable(GL_BLEND);
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
+void ParticleEmitter::onPostUpdate(float dt) {
+	if(data.positionType == ParticlePositionType::FREE) {
+		ParticleSystem::instance()->render(this, Camera::current()->combined());
+	}
+	else {
+		ParticleSystem::instance()->render(this, Camera::current()->combined()*transform());
+	}
 }
 
 void ParticleEmitter::onDestroy() {
 	std::cout << "Destroyed\n";
-	glDeleteBuffers(2, vbo);
+	glDeleteBuffers(1, &vbo);
 }

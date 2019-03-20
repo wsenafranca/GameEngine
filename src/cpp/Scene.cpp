@@ -1,17 +1,16 @@
 #include "Scene.h"
+#include <Application.h>
+#include <ParticleSystem.h>
 
-Scene::Scene(Actor* root) : mRoot(root) {
-
+void Scene::onCreate() {
+	width(Application::app()->window()->width());
+	height(Application::app()->window()->height());
 }
 
-Scene::~Scene() {
-	
-}
-
-void Scene::update(float delta) {
-	mRoot->update(delta);
-}
-
-void Scene::render(Shader &shader) {
-	mRoot->render(shader);
+void Scene::run(float dt) {
+	glFinish();
+	preUpdate(dt);
+	update(dt);
+	ParticleSystem::instance()->sync();
+	postUpdate(dt);
 }

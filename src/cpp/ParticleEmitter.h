@@ -1,20 +1,19 @@
 #ifndef PARTICLE_EMITTER_H
 #define PARTICLE_EMITTER_H
 
-#include <Actor.h>
+#include <Node.h>
 #include <CLEnvironment.h>
 #include <Particle.h>
 
-class ParticleEmitter : public Actor {
+class ParticleEmitter : public Node {
 public:
-	ParticleEmitter();
+	ParticleEmitter(const std::string &name);
 	void load(const std::string &filename);
-	void shrink();
-	void addParticles(unsigned int count);
 
 	void onCreate() override;
+	void onPreUpdate(float dt) override;
 	void onUpdate(float dt) override;
-	void onRender(Shader &shader) override;
+	void onPostUpdate(float dt) override;
 	void onDestroy() override;
 
 	ParticleData data;
@@ -24,14 +23,15 @@ public:
 	bool paused;
 
 	// OpenCL
-	cl::Kernel kAddParticles, kUpdate, kSimulate;
 	cl::BufferGL particles;
 	cl::Buffer randomSeeds;
+	cl::CommandQueue queue;
+	cl::Kernel kAddParticles, kUpdate, kSimulate;
 
 	// OpenGL
 	BlendFunc blendFunc;
 	unsigned int texture;
-	unsigned int vbo[2];
+	unsigned int vbo;
 };
 
 #endif
