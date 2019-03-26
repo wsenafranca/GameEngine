@@ -1,31 +1,32 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#include <glm/glm.hpp>
+#include <Math.h>
+#include <Node.h>
 
-class Camera {
+class Camera : public Node {
 public:
+	TYPENAME(Camera)
+
 	Camera();
 	virtual ~Camera();
-	const glm::vec2& viewport() const;
-	glm::vec2& viewport();
-	void viewport(int width, int height);
-	void zoom(float zoom);
-	const float& zoom() const;
-	float& zoom();
-	void position(float x, float y);
-	const glm::vec2& position() const;
-	glm::vec2& position();
-	glm::mat4 view() const;
-	glm::mat4 projection() const;
-	glm::mat4 combined() const;
-	glm::vec2 unProject(float x, float y, bool invertY = true) const;
+	const b2Vec2& getViewport() const;
+	void setViewport(const b2Vec2 &viewport);
+	void setViewport(int width, int height);
+	void setZoom(const float& zoom);
+	const float& getZoom() const;
+	b2Vec2 unProject(const float& x, const float& y) const;
+
+	b2Mat4 getProjection() const;
+	b2Mat4 getView() const;
+
+	virtual sol::object luaIndex(sol::stack_object key, sol::this_state L) override;
+	virtual void luaNewIndex(sol::stack_object key, sol::stack_object value, sol::this_state L) override;
 
 	static Camera* current();
 private:
 	static Camera* s_camera;
-	glm::vec2 mPosition, mViewport;
-	float mZoom;
+	float m_zoom;
 };
 
 #endif

@@ -7,28 +7,37 @@ add_definitions(-DCMAKE_CXX_FLAGS=-Wa)
 
 set(CPP_DIR src/cpp)
 set(CPP_SRC
-		src/cpp/Bundle.cpp
-		src/cpp/LuaManager.cpp
-		src/cpp/Component.cpp
-		src/cpp/LuaScript.cpp
-		src/cpp/SpriteRenderer.cpp
-		src/cpp/Node.cpp
-		src/cpp/Sprite.cpp
-		src/cpp/BlendFunc.cpp
-		src/cpp/RandomNumberGenerator.cpp
+		src/cpp/MainWindow.cpp
 		src/cpp/DispatchQueue.cpp
 		src/cpp/CLEnvironment.cpp
-		src/cpp/MainWindow.cpp
+		src/cpp/Physics.cpp
+		src/cpp/Texture.cpp
+		src/cpp/TextureRegion.cpp
+		src/cpp/RendererQueue.cpp
+		src/cpp/AppDelegate.cpp
 		src/cpp/Application.cpp
-		src/cpp/Camera.cpp
-		src/cpp/Scene.cpp
-		src/cpp/Particle.cpp
-		src/cpp/ParticleEmitter.cpp
-		src/cpp/ParticleSystem.cpp
-		#src/cpp/BlurRenderer.cpp
+		src/cpp/Bundle.cpp
+		src/cpp/RandomNumberGenerator.cpp
 		src/cpp/Shader.cpp
-		src/cpp/Buffer.cpp
+		src/cpp/BlendFunc.cpp
 		src/cpp/TextureManager.cpp
+		src/cpp/Component.cpp
+		src/cpp/LuaScript.cpp
+		#src/cpp/BlurRenderer.cpp
+		src/cpp/RigidBody.cpp
+		src/cpp/Node.cpp
+		src/cpp/Scene.cpp
+		src/cpp/Camera.cpp
+		src/cpp/Sprite.cpp
+		src/cpp/SpriteBatch.cpp
+		src/cpp/Particle.cpp
+		src/cpp/ParticleSystem.cpp
+		src/cpp/ParticleBatch.cpp
+		#src/cpp/ParticleSystem.cpp
+		src/cpp/LuaManager.cpp
+		src/cpp/TMXTileSet.cpp
+		src/cpp/TMXTileLayer.cpp
+		src/cpp/TMXMap.cpp
         src/cpp/main.cpp)
 include_directories(${CPP_DIR})
 
@@ -60,7 +69,15 @@ include_directories(${LUA_INCLUDE_DIR})
 set(LUA_LIBRARY ${PROJECT_SOURCE_DIR}/libs/lua/lib/liblua52.a)
 target_link_libraries(GameEngine ${LUA_LIBRARY})
 
-include_directories(${PROJECT_SOURCE_DIR}/libs/glm/include)
+set(LIQUIDFUN_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/libs/liquidfun/include)
+include_directories(${LIQUIDFUN_INCLUDE_DIR})
+set(LIQUIDFUN_LIBRARY ${PROJECT_SOURCE_DIR}/libs/liquidfun/lib/libliquidfun.a)
+target_link_libraries(GameEngine ${LIQUIDFUN_LIBRARY})
+target_link_libraries(GameEngine m)
+
 include_directories(${PROJECT_SOURCE_DIR}/libs/stb/include)
 include_directories(${PROJECT_SOURCE_DIR}/libs/rapidjson/include)
+include_directories(${PROJECT_SOURCE_DIR}/libs/rapidxml/include)
 include_directories(${PROJECT_SOURCE_DIR}/libs/sol/include)
+include_directories(${PROJECT_SOURCE_DIR}/libs/glm/include)
+include_directories(${PROJECT_SOURCE_DIR}/libs/boost/include)

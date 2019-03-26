@@ -2,18 +2,17 @@
 #include <Node.h>
 #include <Component.h>
 #include <stdexcept>
-#include <glm/glm.hpp>
 #include <Color.h>
 #include <Input.h>
+#include <RigidBody.h>
+#include <Camera.h>
 
-sol::state LuaManager::state = sol::state();
-
-void LuaManager::init() {
+void LuaManager::onCreate() {
 	state.open_libraries(sol::lib::base, sol::lib::coroutine, sol::lib::string, sol::lib::io, sol::lib::math);
 
-	state.new_usertype<glm::vec2>("Vec2",
-		sol::constructors<glm::vec2(), glm::vec2(float, float)>(),
-		sol::meta_function::index, [](glm::vec2 &v, sol::stack_object key, sol::this_state L){
+	state.new_usertype<b2Vec2>("Vec2",
+		sol::constructors<b2Vec2(), b2Vec2(float, float)>(),
+		sol::meta_function::index, [](b2Vec2 &v, sol::stack_object key, sol::this_state L){
 			auto maybe_string_key = key.as<sol::optional<std::string>>();
 			if (maybe_string_key) {
 				const std::string& k = *maybe_string_key;
@@ -26,7 +25,7 @@ void LuaManager::init() {
 			}
 			return sol::object(L, sol::in_place, sol::lua_nil);
 		},
-		sol::meta_function::new_index, [](glm::vec2 &v, sol::stack_object key, sol::stack_object value, sol::this_state L){
+		sol::meta_function::new_index, [](b2Vec2 &v, sol::stack_object key, sol::stack_object value, sol::this_state L){
 			auto maybe_string_key = key.as<sol::optional<std::string>>();
 			if (maybe_string_key) {
 				const std::string& k = *maybe_string_key;
@@ -72,22 +71,37 @@ void LuaManager::init() {
 					color.g = value.as<unsigned char>();
 				}
 				if(k == "b") {
-					color.g = value.as<unsigned char>();
+					color.b = value.as<unsigned char>();
 				}
 				if(k == "a") {
-					color.g = value.as<unsigned char>();
+					color.a = value.as<unsigned char>();
 				}
 			}
 		});
 
-	state.new_usertype<Bundle::Property>("BundleProperty",
-		"asString", &Bundle::Property::asString,
-		"asInt", &Bundle::Property::asInt,
-		"asUInt", &Bundle::Property::asUInt,
-		"asByte", &Bundle::Property::asByte,
-		"asFloat", &Bundle::Property::asFloat,
-		"asDouble", &Bundle::Property::asDouble,
-		"asLong", &Bundle::Property::asLong);
+	state.new_usertype<std::any>("any",
+		"new", sol::no_constructor,
+		"asString", [](std::any &value){
+			return std::any_cast<std::string>(value);
+		},
+		"asInt", [](std::any &value){
+			return std::any_cast<int>(value);
+		},
+		"asUInt", [](std::any &value){
+			return std::any_cast<unsigned int>(value);
+		},
+		"asByte", [](std::any &value){
+			return std::any_cast<unsigned char>(value);
+		},
+		"asFloat", [](std::any &value){
+			return std::any_cast<float>(value);
+		},
+		"asDouble", [](std::any &value){
+			return std::any_cast<double>(value);
+		},
+		"asLong", [](std::any &value){
+			return std::any_cast<long>(value);
+		});
 	state.new_usertype<Bundle>("Bundle",
 		sol::meta_function::index, [](Bundle &bundle, sol::stack_object key, sol::this_state L){
 			auto maybe_string_key = key.as<sol::optional<std::string>>();
@@ -106,88 +120,51 @@ void LuaManager::init() {
 			}
 		});
 
-	state.new_usertype<Object>("Object",
-		"asNode", &Object::as<Node>,
-		"asComponent", &Object::as<Component>);
-
 	state.new_usertype<Node>("Node",
-		"findNode", &Node::findNode<Node>,
-		"findComponent", &Node::findComponent<Component>,
-		"getParent", &Node::parent,
-		sol::meta_function::index, [](Node &node, sol::stack_object key, sol::this_state L){
-			auto maybe_string_key = key.as<sol::optional<std::string>>();
-			if (maybe_string_key) {
-				const std::string& k = *maybe_string_key;
-				if(k == "name") {
-					return sol::object(L, sol::in_place, node.name());
-				}
-				if(k == "properties") {
-					return sol::object(L, sol::in_place, &node.properties());
-				}
-				if(k == "position") {
-					return sol::object(L, sol::in_place, &node.position());
-				}
-				if(k == "size") {
-					return sol::object(L, sol::in_place, &node.size());
-				}
-				if(k == "width") {
-					return sol::object(L, sol::in_place, node.width());
-				}
-				if(k == "height") {
-					return sol::object(L, sol::in_place, node.height());
-				}
-				if(k == "scale") {
-					return sol::object(L, sol::in_place, &node.scale());
-				}
-				if(k == "rotate") {
-					return sol::object(L, sol::in_place, node.rotate());
-				}
-				if(k == "origin") {
-					return sol::object(L, sol::in_place, &node.origin());
-				}
-				if(k == "color") {
-					return sol::object(L, sol::in_place, &node.color());
-				}
-			}
-			return sol::object(L, sol::in_place, sol::lua_nil);
+		"new", sol::no_constructor,
+		sol::meta_function::garbage_collect, sol::destructor(&Node::destroy),
+		"findNodeByName", &Node::findNodeByName<Node>,
+		"findNodeByType", &Node::findNodeByType,
+		"findComponentByName", &Node::findComponentByName<Component>,
+		"findComponentByType", &Node::findComponentByType,
+		sol::meta_function::index, [](Node &node, sol::stack_object key, sol::this_state L) {
+			return node.luaIndex(key, L);
 		},
 		sol::meta_function::new_index, [](Node &node, sol::stack_object key, sol::stack_object value, sol::this_state L){
-			auto maybe_string_key = key.as<sol::optional<std::string>>();
-			if (maybe_string_key) {
-				const std::string& k = *maybe_string_key;
-				if(k == "name") {
-					node.name(value.as<std::string>());
-				}
-				if(k == "properties") {
-					node.properties(value.as<Bundle>());
-				}
-				if(k == "position") {
-					node.position(value.as<glm::vec2>());
-				}
-				if(k == "size") {
-					node.size(value.as<glm::vec2>());
-				}
-				if(k == "width") {
-					node.width(value.as<float>());
-				}
-				if(k == "height") {
-					node.height(value.as<float>());
-				}
-				if(k == "scale") {
-					node.scale(value.as<glm::vec2>());
-				}
-				if(k == "rotate") {
-					node.rotate(value.as<float>());
-				}
-				if(k == "origin") {
-					node.origin(value.as<glm::vec2>());
-				}
-				if(k == "color") {
-					node.color(value.as<Color>());
-				}
-			}
+			node.luaNewIndex(key, value, L);
 		},
 		sol::base_classes, sol::bases<Object>());
+
+	state.new_usertype<Camera>("Camera",
+		sol::meta_function::index, [](Camera &camera, sol::stack_object key, sol::this_state L){
+			return camera.luaIndex(key, L);
+		},
+		sol::meta_function::new_index, [](Camera &camera, sol::stack_object key, sol::stack_object value, sol::this_state L){
+			camera.luaNewIndex(key, value, L);
+		},
+		sol::base_classes, sol::bases<Node>());
+
+	state.new_usertype<Component>("Component",
+		"asRigidBody", &Component::as<RigidBody>,
+		sol::base_classes, sol::bases<Object>());
+
+	state.new_usertype<RigidBody>("RigidBody",
+		"getPosition", &RigidBody::getPosition,
+		"getAngle", &RigidBody::getAngle,
+		"getLinearVelocity", &RigidBody::getLinearVelocity,
+		"getAngularVelocity", &RigidBody::getAngularVelocity,
+		"getWorldCenter", &RigidBody::getWorldCenter,
+		"getLocalCenter", &RigidBody::getLocalCenter,
+		"applyForce", &RigidBody::applyForce,
+		"applyForceToCenter", &RigidBody::applyForceToCenter,
+		"applyTorque", &RigidBody::applyTorque,
+		"applyLinearImpulse", &RigidBody::applyLinearImpulse,
+		"applyAngularImpulse", &RigidBody::applyAngularImpulse,
+		"getMass", &RigidBody::getMass,
+		"isJumpPeak", &RigidBody::isJumpPeak,
+		"isOnFloor", &RigidBody::isOnFloor,
+		"isFalling", &RigidBody::isFalling,
+		sol::base_classes, sol::bases<Component>());
 
 	auto input = state.create_named_table("Input");
 	input["isKeyPressed"] = Input::isKeyPressed;
@@ -196,6 +173,22 @@ void LuaManager::init() {
 	input["mousePositionY"] = Input::mousePositionY;
 	input["isMouseButtonPressed"] = Input::isMouseButtonPressed;
 	input["isMouseButtonReleased"] = Input::isMouseButtonReleased;
+
+	state.script(R"(
+		math.clamp = function(value, min, max)
+			return math.max(min, math.min(value, max))
+		end
+	)");
+
+	state.script(R"(
+		oldType = type
+		type = function(obj)
+			if obj.__type then
+				return obj.__type
+			end
+			return oldType(obj)
+		end
+	)");
 
 	state.script(R"(
 		local Script_ = {}
@@ -232,4 +225,12 @@ void LuaManager::init() {
 			return data
 		end)"
 	);
+}
+
+void LuaManager::onUpdate(float dt) {
+
+}
+
+void LuaManager::onDestroy() {
+
 }

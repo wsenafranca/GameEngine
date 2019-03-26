@@ -32,7 +32,7 @@ ParticleData::ParticleData() :
 	startColorVar[0] = startColorVar[1] = startColorVar[2] = startColorVar[3] = 0.0f;
 	endColor[0] = endColor[1] = endColor[2] = endColor[3] = 0.0f;
 	endColorVar[0] = endColorVar[1] = endColorVar[2] = endColorVar[3] = 0.0f;
-	gravityMode.gravity[0] = gravityMode.gravity[1] = 0.0f;
+	gravityMode.gravity.x = gravityMode.gravity.y = 0.0f;
 	gravityMode.speed = 0;
 	gravityMode.speedVar = 0;
 	gravityMode.tangentialAccel = 0;

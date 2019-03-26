@@ -2,8 +2,7 @@
 #define NODE_H
 
 #include <string>
-#include <set>
-#include <glm/glm.hpp>
+#include <Math.h>
 #include <Color.h>
 #include <BlendFunc.h>
 #include <Object.h>
@@ -12,14 +11,12 @@
 
 class Node : public Object {
 public:
-	Node();
-	virtual ~Node();
+	TYPENAME(Node)
 
-	void create();
-	void preUpdate(float dt);
+	static Node* create(const std::string &name);
+	
 	void update(float dt);
-	void postUpdate(float dt);
-	void destroy();
+	void render();
 
 	void addNode(Node* child);
 	void removeNode(Node* child);
@@ -28,74 +25,124 @@ public:
 	void removeComponent(Component* component);
 
 	template<class T>
-	T* findNode(const std::string &name) {
+	T* findNodeByName(const std::string &name) {
 		for(auto child : m_children) {
-			if(child->name() == name) {
+			if(child->getName() == name) {
 				return child->as<T>();
 			}
-			auto ret = child->findNode<T>(name);
+			auto ret = child->findNodeByName<T>(name);
+			if(ret) return ret;
+		}
+		return nullptr;
+	}
+
+	Node* findNodeByType(const std::string &type) {
+		for(auto child : m_children) {
+			if(child->getTypeName() == type) {
+				return child;
+			}
+			auto ret = child->findNodeByType(type);
 			if(ret) return ret;
 		}
 		return nullptr;
 	}
 
 	template<class T>
-	T* findComponent(const std::string &name) {
+	T* findComponentByName(const std::string &name) {
 		for(auto component : m_components) {
-			if(component->name() == name) {
+			if(component->getName() == name) {
 				return component->as<T>();
 			}
 		}
 		return nullptr;
 	}
 
-	const Node* parent() const;
+	Component* findComponentByType(const std::string &type) {
+		for(auto component : m_components) {
+			if(component->getTypeName() == type) {
+				return component;
+			}
+		}
+		return nullptr;
+	}
 
-	glm::mat4 transform() const;
+	Node* getRoot();
+	Node* getParent();
 
-	void position(const glm::vec2 &position);
-	const glm::vec2& position() const;
-	glm::vec2& position();
-	void size(const glm::vec2 &size);
-	const glm::vec2& size() const;
-	glm::vec2& size();
-	void width(float width);
-	const float& width() const;
-	float& width();
-	void height(float height);
-	const float& height() const;
-	float& height();
-	void scale(const glm::vec2 &scale);
-	const glm::vec2& scale() const;
-	glm::vec2& scale();
-	void rotate(const float& rotate);
-	const float& rotate() const;
-	float& rotate();
-	void origin(const glm::vec2 &origin);
-	const glm::vec2& origin() const;
-	glm::vec2& origin();
-	void color(const Color &color);
-	const Color& color() const;
-	Color& color();
-	void blendFunc(const BlendFunc &blendFunc);
-	const BlendFunc& blendFunc() const;
-	BlendFunc& blendFunc();
+	b2Mat4 getGlobalTransform() const;
+	b2Mat4 getLocalTransform() const;
+
+	void setPosition(const b2Vec2 &position);
+	void setPosition(const float &x, const float &y);
+	const b2Vec2& getPosition() const;
+
+	void setSize(const b2Vec2 &size);
+	void setSize(const float &x, const float &y);
+	const b2Vec2& getSize() const;
+
+	void setWidth(const float &width);
+	const float& getWidth() const;
+
+	void setHeight(const float &height);
+	const float& getHeight() const;
+
+	void setTranslate(const b2Vec2 &translate);
+	void setTranslate(const float &x, const float &y);
+	const b2Vec2& getTranslate() const;
+
+	void setScale(const b2Vec2 &scale);
+	void setScale(const float &x, const float &y);
+	const b2Vec2& getScale() const;
+
+	void setRotation(const float& theta);
+	void setRotation(const b2Rot &rot);
+	const b2Rot& getRotation() const;
+
+	void setOrigin(const b2Vec2 &origin);
+	void setOrigin(const float &x, const float &y);
+	const b2Vec2& getOrigin() const;
+
+	void flipX();
+	void flipY();
+	void setFlip(const bool& x, const bool& y);
+	void setFlipX(const bool& x);
+	void setFlipY(const bool& y);
+	const bool& getFlipX() const;
+	const bool& getFlipY() const;
+
+	void setZOrder(const int &index);
+	const int& getZOrder() const;
+
+	void setColor(const Color &color);
+	void setColor(const unsigned char &r, const unsigned char &g, const unsigned char &b, const unsigned char &a);
+	const Color& getColor() const;
+
+	void setBlendFunc(const BlendFunc &blendFunc);
+	const BlendFunc& getBlendFunc() const;
+
+	virtual sol::object luaIndex(sol::stack_object key, sol::this_state L) override;
+	virtual void luaNewIndex(sol::stack_object key, sol::stack_object value, sol::this_state L) override;
 
 protected:
+	Node();
+	virtual ~Node();
 	virtual void onCreate() {}
-	virtual void onPreUpdate(float dt) {}
 	virtual void onUpdate(float dt) {}
-	virtual void onPostUpdate(float dt) {}
+	virtual void onRender() {}
 	virtual void onDestroy() {}
 
 private:
 	Node *m_parent;
-	std::set<Node*> m_children;
-	glm::vec2 m_position, m_size, m_scale, m_origin;
-	float m_rotate;
+	std::vector<Node*> m_children;
+	b2Vec2 m_position, m_size, m_translate, m_scale, m_origin;
+	b2Rot m_rotation;
+	bool m_flipX, m_flipY;
+	mutable b2Mat4 m_transform;
+	mutable bool m_dirtyTransform;
 	Color m_color;
+	int m_zOrder;
 	BlendFunc m_blendFunc;
-	std::set<Component*> m_components;
+	std::vector<Component*> m_components;
 };
 
 #endif

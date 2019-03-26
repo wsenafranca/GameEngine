@@ -35,8 +35,8 @@ MainWindow::MainWindow(const std::string &title, int width, int height, bool ful
 
     glfwSwapInterval(1);
     glEnable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_ALWAYS);
+    glDisable(GL_DEPTH_TEST);
+    //glDepthFunc(GL_ALWAYS);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glfwSetInputMode(window, GLFW_STICKY_KEYS, 1);
 }
@@ -62,22 +62,22 @@ bool MainWindow::shouldClose() const {
     return glfwWindowShouldClose(window) != 0;
 }
 
-const std::string& MainWindow::title() const {
+const std::string& MainWindow::getTitle() const {
     return mTitle;
 }
 
-void MainWindow::title(const std::string &title) {
+void MainWindow::setTitle(const std::string &title) {
     mTitle = title;
     glfwSetWindowTitle(window, mTitle.c_str());
 }
 
-unsigned int MainWindow::width() const {
+unsigned int MainWindow::getWidth() const {
     int width, height;
     glfwGetWindowSize(window, &width, &height);
     return width;
 }
 
-unsigned int MainWindow::height() const {
+unsigned int MainWindow::getHeight() const {
     int width, height;
     glfwGetWindowSize(window, &width, &height);
     return height;

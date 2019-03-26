@@ -1,10 +1,9 @@
 #include "Camera.h"
 #include <OpenGL.h>
-#include <glm/gtc/matrix_transform.hpp>
 
 Camera* Camera::s_camera = nullptr;
 
-Camera::Camera() :mPosition(0.0f, 0.0f), mViewport(!.0f, 1.0f), mZoom(1.0f) {
+Camera::Camera() : m_zoom(1.0f) {
 	s_camera = this;
 }
 
@@ -12,67 +11,76 @@ Camera::~Camera() {
 
 }
 
-void Camera::viewport(int width, int height) {
-	mViewport.x = width;
-	mViewport.y = height;
+void Camera::setViewport(const b2Vec2 &viewport) {
+	setSize(viewport);
 }
 
-const glm::vec2& Camera::viewport() const {
-	return mViewport;
+void Camera::setViewport(int width, int height) {
+	setSize(width, height);
 }
 
-glm::vec2& Camera::viewport() {
-	return mViewport;
+const b2Vec2& Camera::getViewport() const {
+	return getSize();
 }
 
-void Camera::zoom(float zoom) {
-	mZoom = zoom;
+void Camera::setZoom(const float& zoom) {
+	m_zoom = zoom;
 }
 
-const float& Camera::zoom() const {
-	return mZoom;
+const float& Camera::getZoom() const {
+	return m_zoom;
 }
 
-float& Camera::zoom() {
-	return mZoom;
+b2Vec2 Camera::unProject(const float& x, const float& y) const {
+	b2Vec2 v;
+	/*
+	To compute the coordinates objX objY objZ , gluUnProject multiplies the normalized device coordinates by the inverse of model * proj as follows:
+	objX objY objZ W = INV ⁡ P ⁢ M ⁢ 2 ⁡ winX - view ⁡ 0 view ⁡ 2 - 1 2 ⁡ winY - view ⁡ 1 view ⁡ 3 - 1 2 ⁡ winZ - 1 1
+	INV denotes matrix inversion. W is an unused variable, included for consistent matrix notation.
+	*/
+	return v;
 }
 
-void Camera::position(float x, float y) {
-	mPosition.x = x;
-	mPosition.y = y;
+b2Mat4 Camera::getProjection() const {
+	float w = (getViewport().x*0.5f)*m_zoom;
+	float h = (getViewport().y*0.5f)*m_zoom;
+	return b2Projection(-w, w, -h, h, -1, 1);
 }
 
-const glm::vec2& Camera::position() const {
-	return mPosition;
+b2Mat4 Camera::getView() const {
+	static b2Vec3 tmp1, tmp2, up(0.0f, 1.0f, 0.0f);
+	const b2Vec2& p = getPosition();
+	tmp1.Set(p.x, p.y, 0.0f);
+	tmp2.Set(p.x, p.y, -1.0f);
+	return b2LookAt(tmp1, tmp2, up);
 }
 
-glm::vec2& Camera::position() {
-	return mPosition;
+sol::object Camera::luaIndex(sol::stack_object key, sol::this_state L) {
+	auto maybe_string_key = key.as<sol::optional<std::string>>();
+	if (maybe_string_key) {
+		const std::string& k = *maybe_string_key;
+		if(k == "zoom") {
+			return sol::object(L, sol::in_place, getZoom());
+		}
+		else if(k == "viewport") {
+			return sol::object(L, sol::in_place, &getViewport());
+		}
+	}
+	return Node::luaIndex(key, L);
 }
 
-glm::mat4 Camera::view() const {
-	glm::vec3 p = glm::vec3(mPosition.x, mPosition.y, 0.0f);
-	static glm::vec3 d(0.0f, 0.0f, 1.0f);
-	static glm::vec3 up(0.0f, -1.0f, 0.0f);
-	return glm::lookAt(p, p+d, up);
-}
-
-glm::mat4 Camera::projection() const {
-	return glm::ortho(mZoom*(-mViewport.x/2.0f), mZoom*(mViewport.x/2.0f), mZoom*(-mViewport.y/2.0f), mZoom*(mViewport.y/2.0f));
-}
-
-glm::mat4 Camera::combined() const {
-	return projection()*view();
-}
-
-glm::vec2 Camera::unProject(float x, float y, bool invertY) const {
-	glm::vec3 p = glm::unProject(
-		glm::vec3(x, invertY ? (mViewport.y-y) : y, 0.0f), 
-		view(), 
-		projection(), 
-		glm::vec4(0.0f, 0.0f, mViewport.x, mViewport.y)
-	);
-	return glm::vec2(p.x, p.y);
+void Camera::luaNewIndex(sol::stack_object key, sol::stack_object value, sol::this_state L) {
+	auto maybe_string_key = key.as<sol::optional<std::string>>();
+	if (maybe_string_key) {
+		const std::string& k = *maybe_string_key;
+		if(k == "zoom") {
+			setZoom(value.as<float>());
+		}
+		else if(k == "viewport") {
+			setViewport(value.as<b2Vec2>());
+		}
+	}
+	Node::luaNewIndex(key, value, L);
 }
 
 Camera* Camera::current() {

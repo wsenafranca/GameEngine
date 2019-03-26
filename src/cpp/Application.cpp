@@ -1,25 +1,44 @@
 #include "Application.h"
 #include <DispatchQueue.h>
-#include <ParticleSystem.h>
+#include <Physics.h>
 #include <LuaManager.h>
-
-Application* Application::sApp = nullptr;
+#include <RendererQueue.h>
+#include <AppDelegate.h>
+#include <algorithm>
 
 Application::Application() {
-	
+	addListener(LuaManager::instance());
+	addListener(DispatchQueue::main());
+	addListener(RendererQueue::instance());
+	addListener(Physics::instance());
 }
 
 Application::~Application() {
+	delete m_delegate;
+}
 
+void Application::setDelegate(AppDelegate *delegate) {
+	m_delegate = delegate;
+	addListener(delegate);
+}
+
+void Application::addListener(AppListener *listener) {
+	listeners.push_back(listener);
+}
+
+void Application::removeListener(AppListener *listener) {
+	auto it = std::find(listeners.begin(), listeners.end(), listener);
+	if(it != listeners.end()) {
+		listeners.erase(it);
+	}
 }
 
 void Application::create() {
-	sApp = this;
 	mWindow = new MainWindow("MainWindow", 800, 600, false);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	ParticleSystem::instance()->init();
-	LuaManager::init();
-	onCreate();
+	for(auto listener : listeners) {
+		listener->onCreate();
+	}
 }
 
 void Application::update() {
@@ -32,23 +51,24 @@ void Application::update() {
 	if(time > 1) {
 		static char title[128];
 		sprintf(title, "MainWindow - FPS: %d", fps);
-		window()->title(title);
+		mWindow->setTitle(title);
 		time = 0;
 		fps = 0;
 	}
 
-	DispatchQueue::main()->poll();
 	mWindow->pollEvents();
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	onUpdate(dt);
+	glClear(GL_COLOR_BUFFER_BIT);
+	for(auto listener : listeners) {
+		listener->onUpdate(dt);
+	}
 	mWindow->swapBuffers();
 }
 
 void Application::destroy() {
-	onDestroy();
-	ParticleSystem::instance()->destroy();
+	for(auto listener : listeners) {
+		listener->onDestroy();
+	}
 	delete mWindow;
-	sApp = nullptr;
 }
 
 void Application::exec() {
@@ -68,26 +88,11 @@ void Application::exit() {
 	mWindow->close();
 }
 
-const MainWindow* Application::window() const {
+const MainWindow* Application::getWindow() const {
 	return mWindow;
 }
 
-MainWindow* Application::window() {
+MainWindow* Application::getWindow() {
 	return mWindow;
 }
 
-Application* Application::app() {
-	return sApp;
-}
-
-void Application::onCreate() {
-
-}
-
-void Application::onUpdate(float delta) {
-
-}
-
-void Application::onDestroy() {
-
-}

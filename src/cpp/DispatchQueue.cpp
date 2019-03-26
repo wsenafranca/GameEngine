@@ -14,7 +14,11 @@ void DispatchQueue::sync(const std::function<void()> &task) {
 	task();
 }
 
-void DispatchQueue::poll() {
+void DispatchQueue::onCreate() {
+
+}
+
+void DispatchQueue::onUpdate(float dt) {
 	std::queue< std::function<void()> > buffer;
 	{
 		std::unique_lock<std::mutex>(mutex);
@@ -27,4 +31,9 @@ void DispatchQueue::poll() {
 		task();
 		buffer.pop();
 	}
+}
+
+void DispatchQueue::onDestroy() {
+	// cleanup
+	onUpdate(0);
 }

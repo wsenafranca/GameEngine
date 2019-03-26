@@ -21,11 +21,11 @@ public:
 	void close();
 	bool shouldClose() const;
 
-	const std::string& title() const;
-	void title(const std::string &title);
+	const std::string& getTitle() const;
+	void setTitle(const std::string &title);
 
-	unsigned int width() const;
-	unsigned int height() const;
+	unsigned int getWidth() const;
+	unsigned int getHeight() const;
 
 	void addKeyListener(const KeyListener &listener);
 	void addWindowResizeListener(const WindowResizeListener &listener);

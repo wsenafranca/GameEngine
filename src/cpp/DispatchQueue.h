@@ -4,14 +4,18 @@
 #include <queue>
 #include <functional>
 #include <mutex>
+#include <AppListener.h>
 
-class DispatchQueue {
+class DispatchQueue : public AppListener {
 public:
 	static DispatchQueue* main();
 
 	void async(const std::function<void()> &task);
 	void sync(const std::function<void()> &task);
-	void poll();
+
+	void onCreate() override;
+	void onUpdate(float dt) override;
+	void onDestroy() override;
 private:
 	std::queue< std::function<void()> > queue;
 	std::mutex mutex;

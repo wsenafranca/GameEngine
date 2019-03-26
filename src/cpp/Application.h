@@ -1,8 +1,13 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
+#include <AppListener.h>
 #include <MainWindow.h>
 #include <mutex>
+#include <AppDelegate.h>
+#include <vector>
+
+class AppDelegate;
 
 class Application {
 public:
@@ -11,15 +16,17 @@ public:
 	void exec();
 	void exit();
 
-	const MainWindow* window() const;
-	MainWindow* window();
+	const MainWindow* getWindow() const;
+	MainWindow* getWindow();
 
-	static Application* app();
+	static Application* app() {
+		static Application a;
+		return &a;
+	}
 
-protected:
-	virtual void onCreate();
-	virtual void onUpdate(float delta);
-	virtual void onDestroy();
+	void setDelegate(AppDelegate *delegate);
+	void addListener(AppListener *listener);
+	void removeListener(AppListener *listener);
 
 private:
 	void create();
@@ -28,12 +35,14 @@ private:
 
 private:
 	MainWindow *mWindow;
-	static Application *sApp;
 	std::mutex mutex;
 
 	float last;
 	int fps;
 	float time;
+
+	AppDelegate *m_delegate;
+	std::vector<AppListener*> listeners;
 };
 
 #endif

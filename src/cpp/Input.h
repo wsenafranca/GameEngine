@@ -5,7 +5,7 @@
 
 namespace Input {
 	inline int keyState(int key) {
-		return glfwGetKey(*Application::app()->window(), key);
+		return glfwGetKey(*Application::app()->getWindow(), key);
 	}
 
 	inline bool isKeyPressed(int key) {
@@ -18,18 +18,18 @@ namespace Input {
 
 	inline int mousePositionX() {
 		double x, y;
-		glfwGetCursorPos(*Application::app()->window(), &x, &y);
+		glfwGetCursorPos(*Application::app()->getWindow(), &x, &y);
 		return (int)x;
 	}
 
 	inline int mousePositionY() {
 		double x, y;
-		glfwGetCursorPos(*Application::app()->window(), &x, &y);
+		glfwGetCursorPos(*Application::app()->getWindow(), &x, &y);
 		return (int)y;
 	}
 
 	inline int mouseButtonState(int button) {
-		return glfwGetMouseButton(*Application::app()->window(), button);
+		return glfwGetMouseButton(*Application::app()->getWindow(), button);
 	}
 
 	inline bool isMouseButtonPressed(int button) {

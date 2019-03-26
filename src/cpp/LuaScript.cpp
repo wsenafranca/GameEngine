@@ -2,13 +2,13 @@
 #include <Node.h>
 
 LuaScript::LuaScript(const std::string &name) {
-	this->name(name);
+	setName(name);
 }
 
 void LuaScript::onCreate() {
-	LuaManager::state.script_file("lua/"+name()+".lua");
-	ref = LuaManager::state[name()];
-	ref["node"] = node();
+	LuaManager::instance()->state.script_file("lua/"+getName()+".lua");
+	ref = LuaManager::instance()->state[getName()];
+	ref["node"] = getNode();
 	ref["cObj"] = (Component*) this;
 	ref["onCreate"](ref);
 }

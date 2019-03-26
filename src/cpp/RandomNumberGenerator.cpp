@@ -17,19 +17,19 @@ int RandomNumberGenerator::random(int min, int max) {
 	return distribution(gen);
 }
 
-glm::vec2 RandomNumberGenerator::random(const glm::vec2 &min, const glm::vec2 &max) {
-	return glm::vec2(random(min.x, max.x), random(min.y, max.y));
+b2Vec2 RandomNumberGenerator::random(const b2Vec2 &min, const b2Vec2 &max) {
+	return b2Vec2(random(min.x, max.x), random(min.y, max.y));
 }
 
-glm::vec3 RandomNumberGenerator::random(const glm::vec3 &min, const glm::vec3 &max) {
-	return glm::vec3(random(min.x, max.x), random(min.y, max.y), random(min.z, max.z));
+b2Vec3 RandomNumberGenerator::random(const b2Vec3 &min, const b2Vec3 &max) {
+	return b2Vec3(random(min.x, max.x), random(min.y, max.y), random(min.z, max.z));
 }
 
-glm::vec4 RandomNumberGenerator::random(const glm::vec4 &min, const glm::vec4 &max) {
-	return glm::vec4(random(min.x, max.x), random(min.y, max.y), random(min.z, max.z), random(min.w, max.w));
+b2Vec4 RandomNumberGenerator::random(const b2Vec4 &min, const b2Vec4 &max) {
+	return b2Vec4(random(min.x, max.x), random(min.y, max.y), random(min.z, max.z), random(min.w, max.w));
 }
 
-glm::vec2 RandomNumberGenerator::random(const glm::vec2 centre, float radius) {
+b2Vec2 RandomNumberGenerator::random(const b2Vec2 &centre, float radius) {
 	float r = random(0.0f, 1.0f) + random(0.0f, 1.0f);
 	if (r > 1.0f) {
 		r = 2.0f - r;
@@ -38,7 +38,7 @@ glm::vec2 RandomNumberGenerator::random(const glm::vec2 centre, float radius) {
 	r *= radius;
 
 	float angle = random(0.0f, 2.0f * M_PI);
-	return glm::vec2(centre.x + r * cos(angle), centre.y + r * sin(angle));
+	return b2Vec2(centre.x + r * cos(angle), centre.y + r * sin(angle));
 }
 
 void RandomNumberGenerator::seed(unsigned s) {

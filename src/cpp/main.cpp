@@ -2,44 +2,73 @@
 #include <iostream>
 #include <fstream>
 #include <Shader.h>
-#include <glm/glm.hpp>
 #include <Scene.h>
-#include <ParticleEmitter.h>
 #include <TextureManager.h>
 #include <Camera.h>
 #include <Sprite.h>
-#include <SpriteRenderer.h>
 #include <LuaScript.h>
+#include <RigidBody.h>
 #include <ParticleSystem.h>
+#include <Physics.h>
+#include <TMXMap.h>
 
-class MyApplication : public Application {
-	void onCreate() {
-		camera.viewport(800, 600);
-		camera.zoom(2.0f);
-
+class MyApplication : public AppDelegate {
+	void onCreate() override {
 		scene = new Scene();
-		Sprite *sprite = new Sprite();
-		sprite->name("Player");
-		sprite->texture(TextureManager::factory()->load("graphics/fog.png"));
-		sprite->addComponent(new SpriteRenderer());
-		sprite->addComponent(new LuaScript("Player"));
-		scene->addNode(sprite);
-		sprite->addNode(new ParticleEmitter("katamari"));
-
 		/*
-		auto root = ActorManager::factory()->create<Actor>("root");
-		root->add(ActorManager::factory()->create<ParticleEmitter>("katamari"));
-		root->add(ActorManager::factory()->create<ParticleEmitter>("hexagon"));
-		root->add(ActorManager::factory()->create<ParticleEmitter>("mana"));
+		Sprite *sprite = Sprite::create("Player");
+		auto texture = TextureManager::instance()->load("graphics/player.png");
+		auto sprites = TextureRegion::split(texture, 4, 3);
+		sprite->setTexture(sprites[1]);
+		//sprite->addComponent(new LuaScript("Player"));
+
+		scene->addNode(sprite);
+
+		b2BodyDef def;
+		def.fixedRotation = false;
+		def.type = b2_dynamicBody;
+		b2PolygonShape boxShape;
+		boxShape.SetAsBox(0.5f, 0.5f);
+
+		b2FixtureDef fixtureDef;
+		fixtureDef.shape = &boxShape;
+
+		auto body = new RigidBody(&def);
+		body->createFixture(&fixtureDef);
+		//sprite->addComponent(body);
+
+		b2BodyDef groundBodyDef;
+		groundBodyDef.position.Set(0.0f, -10.0f);
+		b2Body* groundBody = Physics::instance()->world->CreateBody(&groundBodyDef);
+		b2PolygonShape groundBox;
+		groundBox.SetAsBox(100.0f, 1.0f);
+		groundBody->CreateFixture(&groundBox, 0.0f);
+
+		//sprite->addNode(Node::create<ParticleEmitter>("katamari"));
+		//sprite->addNode(Node::create<ParticleEmitter>("hexagon"));
+		//sprite->addNode(Node::create<ParticleEmitter>("mana"));
+
+		auto particle = ParticleSystem::create("katamari");
+		particle->setScale(0.01f, 0.01f);
+		particle->setPosition(-0.6f, 0.0f);
+		particle->setZOrder(sprite->getZOrder()+1);
+		//particle->setColor(0, 0, 255, 255);
+		sprite->addNode(particle);
 		*/
 
-		window()->addMouseButtonListener([this](int button, int action, int mods, int x, int y){
+		auto map = TMXMap::create("map1");
+		map->setScale(1.0f, 1.0f);
+		scene->addNode(map);
+
+		getWindow()->addMouseButtonListener([this](int button, int action, int mods, int x, int y){
+			/*
 			auto sprite = scene->findNode<Node>("Player");
 			glm::vec2 p = camera.unProject(x, y);
 			sprite->position(p);
+			*/
 		});
 
-		window()->addKeyListener([this](int key, int scancode, int action, int mods) {
+		getWindow()->addKeyListener([this](int key, int scancode, int action, int mods) {
 			printf("%d\n", key);
 			/*
 			auto sprite = scene->findNode<Node>("Player");
@@ -67,26 +96,25 @@ class MyApplication : public Application {
 
 		glShadeModel(GL_SMOOTH);
 		//glEnable(GL_CULL_FACE);
-		//glCullFace(GL_BACK);
+		//glCullFace(GL_FRONT);
 	}
 
-	void onUpdate(float delta) {
+	void onUpdate(float delta) override {
 		scene->run(delta);
 	}
 
-	void onDestroy() {
+	void onDestroy() override {
 		delete scene;
 	}
 
 	bool ready;
 	Scene *scene;
-	Camera camera;
 };
 
 int main() {
 	try {
-		MyApplication app;
-		app.exec();
+		Application::app()->setDelegate(new MyApplication());
+		Application::app()->exec();
 	} catch(const std::exception &e) {
 		std::cerr << "Error: " << e.what() << "\n";
 		return 1;

@@ -211,7 +211,7 @@ void kernel addParticles(global Particle *particles, global unsigned int *random
 		particles[i].gravityMode.dirX = dir.x;
 		particles[i].gravityMode.dirY = dir.y;
 		if(data.gravityMode.rotationIsDir) {
-			particles[i].rotation = -degrees(angle(dir.x, dir.y));
+			particles[i].rotation = degrees(angle(dir.x, dir.y));
 		}
 	}
 	else {
@@ -259,16 +259,16 @@ void kernel simulate(global Particle *particles, const ParticleData data, float 
 		particles[i].gravityMode.dirX += tmp.x;
 		particles[i].gravityMode.dirY += tmp.y;
 
-		tmp.x = particles[i].gravityMode.dirX * dt * -data.yCoordFlipped;
-		tmp.y = particles[i].gravityMode.dirY * dt * -data.yCoordFlipped;
+		tmp.x = particles[i].gravityMode.dirX * dt * data.yCoordFlipped;
+		tmp.y = particles[i].gravityMode.dirY * dt * data.yCoordFlipped;
 		particles[i].posx += tmp.x;
 		particles[i].posy += tmp.y;
 	}
 	else {
 		particles[i].radiusMode.angle += particles[i].radiusMode.degreesPerSecond * dt;
 		particles[i].radiusMode.radius += particles[i].radiusMode.deltaRadius * dt;
-		particles[i].posx = -cos(particles[i].radiusMode.angle) * particles[i].radiusMode.radius * -data.yCoordFlipped;
-		particles[i].posy = -sin(particles[i].radiusMode.angle) * particles[i].radiusMode.radius * -data.yCoordFlipped;
+		particles[i].posx = -cos(particles[i].radiusMode.angle) * particles[i].radiusMode.radius * data.yCoordFlipped;
+		particles[i].posy = -sin(particles[i].radiusMode.angle) * particles[i].radiusMode.radius * data.yCoordFlipped;
 	}
 	
 	particles[i].x = particles[i].startPosX + particles[i].posx;

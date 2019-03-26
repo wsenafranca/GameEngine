@@ -2,15 +2,18 @@
 #define SPRITE_H
 
 #include <Node.h>
+#include <TextureRegion.h>
 
 class Sprite : public Node {
-public:	
-	void texture(const unsigned int &texture);
-	const unsigned int& texture() const;
-	unsigned int& texture();
+public:
+	static Sprite* create(const std::string &name);
 
+	void setTexture(const TextureRegion &texture);
+	const TextureRegion& getTexture() const;
+
+	void onRender() override;
 private:
-	unsigned int m_texture;
+	TextureRegion m_texture;
 };
 
 #endif

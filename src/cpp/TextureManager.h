@@ -4,18 +4,21 @@
 #include <map>
 #include <string>
 #include <functional>
+#include <Texture.h>
+#include <Singleton.h>
 
 class TextureManager {
 public:
-	void loadAsync(const char *filename, const std::function<void(unsigned int)> &callback);
-	unsigned int load(const char *filename);
-	void loadTexture(unsigned int texture, unsigned char *data, int width, int height);
-	static TextureManager* factory();
+	void loadAsync(const std::string &filename, const std::function<void(Texture*)> &callback);
+	Texture* load(const std::string &filename);
+	void loadTexture(Texture* texture, unsigned char *data, int width, int height);
+	
+	SINGLETON(TextureManager)
 private:
 	TextureManager();
 	~TextureManager();
 
-	std::map<std::string, unsigned int> textures;
+	std::map<std::string, Texture*> textures;
 };
 
 #endif

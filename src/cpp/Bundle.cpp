@@ -18,15 +18,15 @@ Bundle::~Bundle() {
 	clear();
 }
 
-const Bundle::Property& Bundle::get(const std::string &name) const {
+const std::any& Bundle::get(const std::string &name) const {
 	return data.at(name);
 }
 
-Bundle::Property& Bundle::operator[](const std::string &name) {
+std::any& Bundle::operator[](const std::string &name) {
 	return data[name];
 }
 
-Bundle::Property& Bundle::operator[](std::string &&name) {
+std::any& Bundle::operator[](std::string &&name) {
 	return data[name];
 }
 

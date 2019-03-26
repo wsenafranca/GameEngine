@@ -1,33 +1,37 @@
 #ifndef PARTICLE_SYSTEM_H
 #define PARTICLE_SYSTEM_H
 
-#include <ParticleEmitter.h>
-#include <Shader.h>
-#include <Camera.h>
+#include <Node.h>
+#include <CLEnvironment.h>
+#include <Particle.h>
+#include <TextureRegion.h>
 #include <thread>
-#include <vector>
+#include <mutex>
 
-class ParticleSystem {
+class ParticleSystem : public Node {
 public:
-	void init();
-	void update(ParticleEmitter *emitter, float dt);
-	void asyncUpdate(ParticleEmitter *emitter, float dt);
-	void sync();
-	void render(ParticleEmitter *emitter, const glm::mat4 &mvp);
-	void destroy();
+	static ParticleSystem* create(const std::string &name);
+	
+protected:
+	void onCreate() override;
+	void onUpdate(float dt) override;
+	void onRender() override;
+	void onDestroy() override;
 
-	static ParticleSystem* instance();
 private:
-	ParticleSystem();
-	~ParticleSystem();
-	void addParticles(ParticleEmitter *emitter, unsigned int count);
-	void shrink(ParticleEmitter *emitter);
+	void load(const std::string &filename);
+	void addParticles(unsigned int count);
+	ParticleData data;
 
+	// OpenCL
+	cl::BufferGL particles;
+	cl::Buffer randomSeeds;
+	cl::CommandQueue queue;
+	cl::Kernel kAddParticles, kUpdate, kSimulate;
+
+	// OpenGL
+	TextureRegion texture;
 	unsigned int vbo;
-	Shader shader;
-
-	std::vector<std::thread> threads;
-	std::mutex mutex;
 };
 
 #endif

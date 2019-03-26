@@ -2,14 +2,21 @@
 #define LUA_MANAGER_H
 
 #include <sol/sol.hpp>
+#include <AppListener.h>
+#include <Singleton.h>
 
-class LuaManager {
+class LuaManager : public AppListener{
 public:
-	static sol::state state;
-	static void init();
+	SINGLETON(LuaManager)
+	
+	void onCreate() override;
+	void onUpdate(float dt) override;
+	void onDestroy() override;
+	sol::state state;
 private:
 	LuaManager() = default;
 	~LuaManager() = default;
+	
 };
 
 #endif

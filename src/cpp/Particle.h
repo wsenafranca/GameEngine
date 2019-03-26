@@ -1,8 +1,9 @@
 #ifndef PARTICLE_H
 #define PARTICLE_H
 #include <BlendFunc.h>
-#include <glm/glm.hpp>
 #include <BlendFunc.h>
+
+#include <Math.h>
 
 struct Particle {
 	float x;
@@ -56,13 +57,13 @@ class ParticleData {
 public:
 	ParticleData();
 
-	glm::vec2 position;
+	b2Vec2 position;
 
 	bool isAutoRemoveOnFinish;
 	float elapsed;
 
 	struct {
-		glm::vec2 gravity;
+		b2Vec2 gravity;
 		float speed;
 		float speedVar;
 		float tangentialVar;
@@ -86,8 +87,8 @@ public:
 	int particleCount;
 
 	float duration; // -1 means inifinite
-	glm::vec2 sourcePosition;
-	glm::vec2 posVar;
+	b2Vec2 sourcePosition;
+	b2Vec2 posVar;
 	float life;
 	float lifeVar;
 	float angle;
@@ -99,10 +100,10 @@ public:
 	float startSizeVar;
 	float endSize;
 	float endSizeVar;
-	glm::vec4 startColor;
-	glm::vec4 startColorVar;
-	glm::vec4 endColor;
-	glm::vec4 endColorVar;
+	float startColor[4];
+	float startColorVar[4];
+	float endColor[4];
+	float endColorVar[4];
 	float startSpin;
 	float startSpinVar;
 	float endSpin;

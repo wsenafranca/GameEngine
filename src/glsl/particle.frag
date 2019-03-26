@@ -2,6 +2,7 @@
 
 uniform sampler2D tex1;
 uniform int u_enableTexture;
+uniform vec4 u_color;
 
 in vec2 f_texcoord;
 in vec4 f_color;
@@ -10,7 +11,7 @@ layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
 
 void main (void) {
-	vec4 color = f_color * (u_enableTexture > 0 ? texture2D(tex1, f_texcoord) : vec4(1, 1, 1, 1));
+	vec4 color = u_color * f_color * (u_enableTexture > 0 ? texture2D(tex1, f_texcoord) : vec4(1, 1, 1, 1));
 
     vec3 result = color.rgb;
     float brightness = dot(result, vec3(0.2126, 0.7152, 0.0722));

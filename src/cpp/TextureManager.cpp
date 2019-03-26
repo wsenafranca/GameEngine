@@ -11,43 +11,44 @@ TextureManager::TextureManager() {
 
 TextureManager::~TextureManager() {
 	for(auto it : textures) {
-		glDeleteTextures(1, &(it.second));
+		glDeleteTextures(1, &(it.second->m_tex));
+		delete it.second;
 	}
 }
 
-void TextureManager::loadAsync(const char *filename, const std::function<void(unsigned int)> &callback) {
+void TextureManager::loadAsync(const std::string &filename, const std::function<void(Texture*)> &callback) {
 	auto it = textures.find(filename);
 	if(it == textures.end()) {
-		unsigned int texture;
-		glGenTextures(1, &texture);
+		Texture *texture = new Texture();
 		textures[filename] = texture;
+		glGenTextures(1, &texture->m_tex);
 		std::thread *thread;
 		thread = new std::thread([thread, filename, texture, callback]() {
 			int width, height, n;
-			unsigned char *data = stbi_load(filename, &width, &height, &n, 4);
+			unsigned char *data = stbi_load(filename.c_str(), &width, &height, &n, 4);
 			DispatchQueue::main()->async([thread, texture, data, width, height, callback]() {
-				TextureManager::factory()->loadTexture(texture, data, width, height);
+				TextureManager::instance()->loadTexture(texture, data, width, height);
 				delete thread;
 				callback(texture);
 			});
 		});
 	}
 	else {
-		unsigned int texture = it->second;
+		Texture* texture = it->second;
 		DispatchQueue::main()->async([callback, texture](){
 			callback(texture);
 		});
 	}
 }
 
-unsigned int TextureManager::load(const char *filename) {
+Texture* TextureManager::load(const std::string &filename) {
 	auto it = textures.find(filename);
 	if(it == textures.end()) {
-		unsigned int texture;
-		glGenTextures(1, &texture);
+		Texture *texture = new Texture();
 		textures[filename] = texture;
+		glGenTextures(1, &texture->m_tex);
 		int width, height, n;
-		unsigned char *data = stbi_load(filename, &width, &height, &n, 4);
+		unsigned char *data = stbi_load(filename.c_str(), &width, &height, &n, 4);
 		loadTexture(texture, data, width, height);
 		return texture;
 	}
@@ -56,22 +57,26 @@ unsigned int TextureManager::load(const char *filename) {
 	}
 }
 
-void TextureManager::loadTexture(unsigned int texture, unsigned char *data, int width, int height) {
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+void TextureManager::loadTexture(Texture* texture, unsigned char *data, int width, int height) {
+	glBindTexture(GL_TEXTURE_2D, *texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
+	/*
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	*/
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+
 
 	glBindTexture(0, GL_TEXTURE_2D);
 
-	free(data);
-}
+	texture->m_width = width;
+	texture->m_height = height;
 
-TextureManager* TextureManager::factory() {
-	static TextureManager man;
-	return &man;
+	free(data);
 }
