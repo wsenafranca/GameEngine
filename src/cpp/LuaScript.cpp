@@ -25,6 +25,18 @@ void LuaScript::onPostUpdate(float dt) {
 	ref["onPostUpdate"](ref, dt);
 }
 
+void LuaScript::onPreRender() {
+	ref["onPreRender"](ref);
+}
+
+void LuaScript::onRender() {
+	ref["onRender"](ref);
+}
+
+void LuaScript::onPostRender() {
+	ref["onPostRender"](ref);
+}
+
 void LuaScript::onDestroy() {
 	ref["onDestroy"](ref);
 }

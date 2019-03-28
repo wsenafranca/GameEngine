@@ -25,6 +25,7 @@ const b2Vec2& Camera::getViewport() const {
 
 void Camera::setZoom(const float& zoom) {
 	m_zoom = zoom;
+	m_dirtyTransform = true;
 }
 
 const float& Camera::getZoom() const {
@@ -32,13 +33,12 @@ const float& Camera::getZoom() const {
 }
 
 b2Vec2 Camera::unProject(const float& x, const float& y) const {
-	b2Vec2 v;
-	/*
-	To compute the coordinates objX objY objZ , gluUnProject multiplies the normalized device coordinates by the inverse of model * proj as follows:
-	objX objY objZ W = INV ⁡ P ⁢ M ⁢ 2 ⁡ winX - view ⁡ 0 view ⁡ 2 - 1 2 ⁡ winY - view ⁡ 1 view ⁡ 3 - 1 2 ⁡ winZ - 1 1
-	INV denotes matrix inversion. W is an unused variable, included for consistent matrix notation.
-	*/
-	return v;
+	static b2Vec4 viewport;
+	viewport.x = 0;
+	viewport.y = 0;
+	viewport.z = 800;
+	viewport.w = 600;
+	return b2UnProject(b2Vec2(x, y), getCombined(), viewport);
 }
 
 b2Mat4 Camera::getProjection() const {
@@ -53,6 +53,14 @@ b2Mat4 Camera::getView() const {
 	tmp1.Set(p.x, p.y, 0.0f);
 	tmp2.Set(p.x, p.y, -1.0f);
 	return b2LookAt(tmp1, tmp2, up);
+}
+
+b2Mat4 Camera::getCombined() const {
+	if(m_dirtyTransform) {
+		combined = getProjection()*getView();
+		m_dirtyTransform = false;
+	}
+	return combined;
 }
 
 sol::object Camera::luaIndex(sol::stack_object key, sol::this_state L) {

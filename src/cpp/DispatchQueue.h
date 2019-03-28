@@ -14,7 +14,8 @@ public:
 	void sync(const std::function<void()> &task);
 
 	void onCreate() override;
-	void onUpdate(float dt) override;
+	void onUpdate(float dt) override {}
+	void onPreUpdate(float dt) override;
 	void onDestroy() override;
 private:
 	std::queue< std::function<void()> > queue;

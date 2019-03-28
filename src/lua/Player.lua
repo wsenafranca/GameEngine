@@ -11,9 +11,9 @@ Player = Script {
 		local desiredVel = 0;
 		if Input.isKeyPressed(68) then
 			self.node.flipX = false
-			desiredVel = 4
+			desiredVel = 5
 		elseif Input.isKeyPressed(65) then
-			desiredVel = -4
+			desiredVel = -5
 			self.node.flipX = true
 		end
 
@@ -21,7 +21,7 @@ Player = Script {
 		local impulse = velChange * self.body:getMass()
 		self.body:applyLinearImpulse(Vec2.new(impulse, 0), self.body:getWorldCenter(), true)
 
-		velChange = 6 - vel.y
+		velChange = 7 - vel.y
 		impulse = velChange * self.body:getMass()
 		if Input.isKeyPressed(87) and self.body:isOnFloor() then
 			self.body:applyLinearImpulse(Vec2.new(0, impulse), self.body:getWorldCenter(), true)

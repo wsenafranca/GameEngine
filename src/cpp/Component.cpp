@@ -13,15 +13,7 @@ void Component::onCreate() {
 
 }
 
-void Component::onPreUpdate(float dt) {
-
-}
-
 void Component::onUpdate(float dt) {
-
-}
-
-void Component::onPostUpdate(float dt) {
 
 }
 

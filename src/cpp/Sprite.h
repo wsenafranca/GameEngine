@@ -6,6 +6,7 @@
 
 class Sprite : public Node {
 public:
+	TYPENAME(Sprite)
 	static Sprite* create(const std::string &name);
 
 	void setTexture(const TextureRegion &texture);

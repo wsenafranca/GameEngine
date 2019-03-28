@@ -8,6 +8,7 @@
 #include <Camera.h>
 #include <LuaScript.h>
 #include <ParticleSystem.h>
+#include <LightManager.h>
 
 static void TMXCheckProperties(Bundle *properties, rapidxml::xml_node<> *node);
 
@@ -27,10 +28,17 @@ const unsigned int& TMXMap::getTileHeight() const {
 
 void TMXMap::onCreate() {
 	load("data/"+getName()+".tmx");
+	Node::onCreate();
+}
+
+void TMXMap::onPreRender() {
+	glClearColor(getColor().r/255.0f, getColor().g/255.0f, getColor().b/255.0f, 1);
+	Node::onPreRender();
 }
 
 void TMXMap::onDestroy() {
 	delete tileSet;
+	Node::onDestroy();
 }
 
 void TMXMap::load(const std::string &filename) {
@@ -48,17 +56,21 @@ void TMXMap::load(const std::string &filename) {
 	m_tileWidth = std::atoi(root->first_attribute("tilewidth")->value());
 	m_tileHeight = std::atoi(root->first_attribute("tileheight")->value());
 	setSize(gridWidth*m_tileWidth, gridHeight*m_tileHeight);
+	
 	Color backgroundColor;
 	if(root->first_attribute("backgroundcolor")) {
 		backgroundColor = Color(root->first_attribute("backgroundcolor")->value());
 	}
 	else {
-		backgroundColor = Color(0, 0, 0, 255);
+		backgroundColor = Color::fromFloat(0.0f, 0.0f, 0.0f, 1.0f);
 	}
 	setColor(backgroundColor);
-	glClearColor(backgroundColor.r/255.0f, backgroundColor.g/255.0f, backgroundColor.b/255.0f, 1);
 
 	TMXCheckProperties(&getProperties(), root);
+	if(getProperties().contains("ambientLight")) {
+		Color color = std::any_cast<Color>(getProperties()["ambientLight"]);
+		LightManager::instance()->setAmbientLight(color);
+	}
 
 	node = root->first_node("tileset");
 	attr = node->first_attribute("source")->value();
@@ -86,8 +98,8 @@ void TMXMap::load(const std::string &filename) {
 				int tile = std::atoi(token.c_str()) - 1;
 				if(tile >= 0) {
 					TMXTileLayerData d;
-					d.x = (i%gridWidth*m_tileWidth - getWidth()/2.0f)/m_tileWidth+0.5f;
-					d.y = (getHeight() - i/gridHeight*m_tileHeight - getHeight()/2.0f)/m_tileHeight-0.5f;
+					d.x = (i%gridWidth*m_tileWidth - getWidth()/2.0f);
+					d.y = (getHeight() - i/gridHeight*m_tileHeight - getHeight()/2.0f);
 					d.tile = tile;
 					data.push_back(d);
 				}
@@ -121,27 +133,35 @@ void TMXMap::load(const std::string &filename) {
 				width /= m_tileWidth;
 				height /= m_tileHeight;
 
-				if(type == "Light") {
-
+				Bundle properties;
+				TMXCheckProperties(&properties, child);
+				if(type == "DirectionalLight") {
+					Color color = std::any_cast<Color>(properties["color"]);
+					float angle = properties.get<float>("angle", 90.0f);
+					int rays = properties.get<int>("rays", 4);
+					LightManager::instance()->createDirectionalLight(rays, color, angle);
+				}
+				else if(type == "PointLight") {
+					Color color = std::any_cast<Color>(properties["color"]);
+					float distance = properties.get<float>("distance", 10);
+					int rays = properties.get<int>("rays", 4);
+					LightManager::instance()->createPointLight(rays, color, distance, x, y);
 				}
 				else {
 					Node* obj;
-					Bundle properties;
-					TMXCheckProperties(&properties, child);
 					if(type == "Sprite") {
 						obj = Sprite::create(name);
 						std::string textureFile = std::any_cast<std::string>(properties["sprite"]);
 						auto texture = TextureManager::instance()->load("graphics/" + textureFile);
 						if(properties.contains("row") && properties.contains("col")) {
-							int row = 4;//properties["row"].as<int>();
-							int col = 3;//properties["col"].as<int>();
-							int sid = 7;//properties["sid"].as<int>();
+							int row = std::any_cast<int>(properties["row"]);
+							int col = std::any_cast<int>(properties["col"]);
+							int sid = std::any_cast<int>(properties["sid"]);
 							auto sprites = TextureRegion::split(texture, row, col, 24);
 							for(TextureRegion& sprite : sprites) {
 								sprite.offsetY = 6;
 							}
 							((Sprite*)obj)->setTexture(sprites[sid]);
-							//obj->setTranslate(0.0f, 0.25f);
 						}
 						else {
 							((Sprite*)obj)->setTexture(texture);
@@ -161,9 +181,9 @@ void TMXMap::load(const std::string &filename) {
 					else {
 						obj = Node::create(name);
 					}
-					printf("%f %f\n", x, y);
 					obj->setZOrder(z);
 					obj->setProperties(properties);
+
 					if(properties.contains("static")) {
 						bool isStatic = properties.get("static", false);
 						b2BodyDef def;
@@ -277,17 +297,15 @@ void TMXCheckProperties(Bundle *properties, rapidxml::xml_node<> *node) {
 				(*properties)[name] = value;
 			}
 			else if(type == "color") {
-				Color c(&attr[1]); // skip #
+				Color c(attr); // skip #
 				(*properties)[name] = c;
 			}
 			else if(type == "float") {
-				float v;
-				memcpy(&v, attr, sizeof(float));
+				float v = std::atof(attr);
 				(*properties)[name] = v;
 			}
 			else if(type == "int") {
-				int v;
-				memcpy(&v, attr, sizeof(int));
+				int v = std::atoi(attr);
 				(*properties)[name] = v;
 			}
 			else if(type == "file") {

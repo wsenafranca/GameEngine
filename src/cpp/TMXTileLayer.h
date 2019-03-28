@@ -12,6 +12,7 @@ struct TMXTileLayerData {
 
 class TMXTileLayer : public Node {
 public:
+	TYPENAME(TMXTileLayer)
 	TMXTileLayer(const std::string& name, int width, int height, TMXTileSet *tileSet, const std::vector<TMXTileLayerData> &data);
 	
 	void onCreate() override;

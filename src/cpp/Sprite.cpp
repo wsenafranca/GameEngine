@@ -22,9 +22,12 @@ void Sprite::onRender() {
 		getTexture(), 
 		0.0f, 0.0f,
 		getSize().x, getSize().y,
+		0.0f,
 		getFlipX(), getFlipY(),
 		getGlobalTransform(),
 		getColor(),
 		getZOrder(),
-		getBlendFunc());
+		getBlendFunc(),
+		isBlur());
+	Node::onRender();
 }

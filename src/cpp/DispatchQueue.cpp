@@ -18,7 +18,7 @@ void DispatchQueue::onCreate() {
 
 }
 
-void DispatchQueue::onUpdate(float dt) {
+void DispatchQueue::onPreUpdate(float dt) {
 	std::queue< std::function<void()> > buffer;
 	{
 		std::unique_lock<std::mutex>(mutex);
@@ -35,5 +35,5 @@ void DispatchQueue::onUpdate(float dt) {
 
 void DispatchQueue::onDestroy() {
 	// cleanup
-	onUpdate(0);
+	onPreUpdate(0);
 }

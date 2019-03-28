@@ -37,6 +37,7 @@ MainWindow::MainWindow(const std::string &title, int width, int height, bool ful
     glEnable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     //glDepthFunc(GL_ALWAYS);
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glfwSetInputMode(window, GLFW_STICKY_KEYS, 1);
 }
@@ -151,6 +152,7 @@ void MainWindow::mouseButtonCallback(GLFWwindow *window, int button, int action,
     glfwGetCursorPos(window, &rx, &ry);
     int x = rx;
     int y = ry;
+    
     MainWindow *mainWindow = static_cast<MainWindow*>(glfwGetWindowUserPointer(window));
     for(auto &listener : mainWindow->mouseButtonListeners) {
         listener(button, action, mods, x, y);

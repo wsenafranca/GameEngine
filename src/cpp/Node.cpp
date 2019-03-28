@@ -1,20 +1,22 @@
 #include "Node.h"
 #include <DispatchQueue.h>
 
-Node::Node() :  m_parent(nullptr),
+Node::Node() :  
+				m_dirtyTransform(true),
+				m_parent(nullptr),
 				m_position(0.0f, 0.0f),
 				m_size(1.0f, 1.0f),
 				m_translate(0.0f, 0.0f),
 				m_scale(1.0f, 1.0f),
 				m_rotation(b2Rot(0.0f)),
 				m_transform(1.0f),
-				m_dirtyTransform(true),
 				m_origin(0.0f, 0.0f),
 				m_flipX(false),
 				m_flipY(false),
 				m_color(255, 255, 255, 255),
 				m_zOrder(0),
-				m_blendFunc(BlendFunc::ALPHA_NON_PREMULTIPLIED) 
+				m_blendFunc(BlendFunc::ALPHA_NON_PREMULTIPLIED),
+				m_blur(false)
 {
 	
 }
@@ -36,35 +38,63 @@ Node* Node::create(const std::string &name) {
 	return node;
 }
 
-void Node::update(float dt) {
+void Node::onPreUpdate(float dt) {
 	for(auto &component : m_components) {
 		component->onPreUpdate(dt);
 	}
 
+	for(auto &child : m_children) {
+		child->onPreUpdate(dt);
+	}
+}
+
+void Node::onUpdate(float dt) {
 	for(auto &component : m_components) {
 		component->onUpdate(dt);
 	}
 
-	onUpdate(dt);
+	for(auto &child : m_children) {
+		child->onUpdate(dt);
+	}
+}
 
+void Node::onPostUpdate(float dt) {
 	for(auto &component : m_components) {
 		component->onPostUpdate(dt);
 	}
 
 	for(auto &child : m_children) {
-		child->update(dt);
+		child->onPostUpdate(dt);
 	}
 }
 
-void Node::render() {
-	onRender();
+void Node::onPreRender() {
+	for(auto &component : m_components) {
+		component->onPreRender();
+	}
 
+	for(auto &child : m_children) {
+		child->onPreRender();
+	}
+}
+
+void Node::onRender() {
 	for(auto &component : m_components) {
 		component->onRender();
 	}
 
 	for(auto &child : m_children) {
-		child->render();
+		child->onRender();
+	}
+}
+
+void Node::onPostRender() {
+	for(auto &component : m_components) {
+		component->onPostRender();
+	}
+
+	for(auto &child : m_children) {
+		child->onPostRender();
 	}
 }
 
@@ -310,6 +340,14 @@ const int& Node::getZOrder() const {
 void Node::setBlendFunc(const BlendFunc &blendFunc) {
 	m_blendFunc.src = blendFunc.src;
 	m_blendFunc.dst = blendFunc.dst;
+}
+
+void Node::setBlur(const bool &blur) {
+	m_blur = blur;
+}
+
+const bool& Node::isBlur() const {
+	return m_blur;
 }
 
 const BlendFunc& Node::getBlendFunc() const {

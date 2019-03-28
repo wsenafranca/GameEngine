@@ -19,6 +19,7 @@ public:
 
 	b2Mat4 getProjection() const;
 	b2Mat4 getView() const;
+	b2Mat4 getCombined() const;
 
 	virtual sol::object luaIndex(sol::stack_object key, sol::this_state L) override;
 	virtual void luaNewIndex(sol::stack_object key, sol::stack_object value, sol::this_state L) override;
@@ -27,6 +28,7 @@ public:
 private:
 	static Camera* s_camera;
 	float m_zoom;
+	mutable b2Mat4 combined;
 };
 
 #endif

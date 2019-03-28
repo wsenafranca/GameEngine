@@ -8,15 +8,13 @@
 #include <Object.h>
 #include <Component.h>
 #include <vector>
+#include <AppListener.h>
 
-class Node : public Object {
+class Node : public Object, public AppListener {
 public:
 	TYPENAME(Node)
 
 	static Node* create(const std::string &name);
-	
-	void update(float dt);
-	void render();
 
 	void addNode(Node* child);
 	void removeNode(Node* child);
@@ -120,16 +118,25 @@ public:
 	void setBlendFunc(const BlendFunc &blendFunc);
 	const BlendFunc& getBlendFunc() const;
 
+	void setBlur(const bool &blur);
+	const bool& isBlur() const;
+
 	virtual sol::object luaIndex(sol::stack_object key, sol::this_state L) override;
 	virtual void luaNewIndex(sol::stack_object key, sol::stack_object value, sol::this_state L) override;
 
 protected:
 	Node();
 	virtual ~Node();
-	virtual void onCreate() {}
-	virtual void onUpdate(float dt) {}
-	virtual void onRender() {}
-	virtual void onDestroy() {}
+	virtual void onCreate() override {}
+	virtual void onPreUpdate(float dt) override;
+	virtual void onUpdate(float dt) override;
+	virtual void onPostUpdate(float dt) override;
+	virtual void onPreRender() override;
+	virtual void onRender() override;
+	virtual void onPostRender() override;
+	virtual void onDestroy() override {}
+
+	mutable bool m_dirtyTransform;
 
 private:
 	Node *m_parent;
@@ -138,11 +145,11 @@ private:
 	b2Rot m_rotation;
 	bool m_flipX, m_flipY;
 	mutable b2Mat4 m_transform;
-	mutable bool m_dirtyTransform;
 	Color m_color;
 	int m_zOrder;
 	BlendFunc m_blendFunc;
 	std::vector<Component*> m_components;
+	bool m_blur;
 };
 
 #endif

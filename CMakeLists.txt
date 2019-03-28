@@ -18,6 +18,8 @@ set(CPP_SRC
 		src/cpp/Application.cpp
 		src/cpp/Bundle.cpp
 		src/cpp/RandomNumberGenerator.cpp
+		src/cpp/FrameBuffer.cpp
+		src/cpp/Mesh.cpp
 		src/cpp/Shader.cpp
 		src/cpp/BlendFunc.cpp
 		src/cpp/TextureManager.cpp
@@ -30,16 +32,26 @@ set(CPP_SRC
 		src/cpp/Camera.cpp
 		src/cpp/Sprite.cpp
 		src/cpp/SpriteBatch.cpp
-		src/cpp/Particle.cpp
 		src/cpp/ParticleSystem.cpp
-		src/cpp/ParticleBatch.cpp
-		#src/cpp/ParticleSystem.cpp
 		src/cpp/LuaManager.cpp
 		src/cpp/TMXTileSet.cpp
 		src/cpp/TMXTileLayer.cpp
 		src/cpp/TMXMap.cpp
+		src/cpp/LightManager.cpp
         src/cpp/main.cpp)
 include_directories(${CPP_DIR})
+
+set(BOX2DLIGHTS_DIR
+	src/cpp/box2dlights)
+set(BOX2DLIGHTS_SRC
+	src/cpp/box2dlights/Light.cpp
+	src/cpp/box2dlights/LightMap.cpp
+	src/cpp/box2dlights/RayHandler.cpp
+	src/cpp/box2dlights/DirectionalLight.cpp
+	src/cpp/box2dlights/PositionalLight.cpp
+	src/cpp/box2dlights/PointLight.cpp
+	src/cpp/box2dlights/ConeLight.cpp)
+include_directories(${BOX2DLIGHTS_DIR})
 
 set(GLEW_DIR ${PROJECT_SOURCE_DIR}/libs/glew/include)
 set(GLEW_SRC 
@@ -47,7 +59,7 @@ set(GLEW_SRC
 include_directories(${GLEW_DIR})
 add_definitions(-DGLEW_STATIC)
 
-add_executable (GameEngine ${GLEW_SRC} ${CPP_SRC})
+add_executable (GameEngine ${GLEW_SRC} ${BOX2DLIGHTS_SRC} ${CPP_SRC})
 
 find_package(OpenGL REQUIRED)
 target_link_libraries(GameEngine ${OPENGL_gl_LIBRARY})

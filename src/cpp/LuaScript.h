@@ -13,6 +13,9 @@ protected:
 	void onPreUpdate(float dt) override;
 	void onUpdate(float dt) override;
 	void onPostUpdate(float dt) override;
+	void onPreRender() override;
+	void onRender() override;
+	void onPostRender() override;
 	void onDestroy() override;
 private:
 	sol::table ref;

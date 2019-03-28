@@ -2,10 +2,11 @@
 #define COMPONENT_H
 
 #include <Object.h>
+#include <AppListener.h>
 
 class Node;
 
-class Component : public Object {
+class Component : public Object, public AppListener {
 public:
 	TYPENAME(Component)
 
@@ -13,12 +14,10 @@ public:
 	Node* getNode();
 	friend class Node;
 protected:
-	virtual void onCreate();
-	virtual void onPreUpdate(float dt);
-	virtual void onUpdate(float dt);
-	virtual void onPostUpdate(float dt);
-	virtual void onRender();
-	virtual void onDestroy();
+	virtual void onCreate() override;
+	virtual void onUpdate(float dt) override;
+	virtual void onRender() override;
+	virtual void onDestroy() override;
 private:
 	Node *m_node;
 };

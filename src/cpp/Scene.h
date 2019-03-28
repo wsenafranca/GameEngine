@@ -5,7 +5,7 @@
 
 class Scene : public Node {
 public:
-	void run(float dt);
+	TYPENAME(Scene)
 	void onCreate();
 };
 

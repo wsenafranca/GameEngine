@@ -4,6 +4,7 @@
 #include <Node.h>
 #include <TMXTileLayer.h>
 #include <TMXTileSet.h>
+#include <vector>
 
 class TMXMap : public Node {
 public:
@@ -13,8 +14,10 @@ public:
 
 	const unsigned int& getTileWidth() const;
 	const unsigned int& getTileHeight() const;
+
 protected:
 	void onCreate() override;
+	void onPreRender() override;
 	void onDestroy() override;
 private:
 	void load(const std::string &filename);

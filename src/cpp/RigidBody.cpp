@@ -23,6 +23,7 @@ void RigidBody::onPostUpdate(float delta) {
 }
 
 void RigidBody::onRender() {
+	return;
 	for(b2Fixture *fixture = body->GetFixtureList(); fixture; fixture = fixture->GetNext()) {
 		switch(fixture->GetType()) {
 			case b2Shape::e_circle:
@@ -44,11 +45,13 @@ void RigidBody::onRender() {
 					TextureRegion(), 
 					(maxV.x + minV.x)/2.0f, (maxV.y + minV.y)/2.0f,
 					maxV.x - minV.x, maxV.y - minV.y,
+					0.0f,
 					false, false,
 					getNode()->getGlobalTransform(),
 					fixture->IsSensor() ? Color(0, 255, 0, 100) : Color(255, 0, 0, 100),
 					getNode()->getZOrder()+1,
-					getNode()->getBlendFunc());
+					getNode()->getBlendFunc(),
+					getNode()->isBlur());
 				break;
 			}
 		}

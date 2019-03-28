@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <sstream>
 #include <cmath>
 #include <glm/glm.hpp>
 #include <cstring>
@@ -17,18 +18,23 @@ struct Color {
 	}
 
 	Color(const std::string &hex) {
-		uint32_t h = std::stoi(&(hex[1]), nullptr, 16);
-		r = ((h >> 16) & 0xFF);
-		g = ((h >>  8) & 0xFF);
-		b = ((h      ) & 0xFF);
-		a = 255;
+		uint32_t h;
+		std::string hexColor = hex[0] == '#' ? &(hex[1]) : hex;
+		hexColor = hexColor.size() > 6 ? hexColor : "ff"+hexColor;
+		std::stringstream stream;
+		stream << std::hex << hexColor;
+		stream >> h;
+		a = ((h & 0xff000000) >> 24);
+		r = ((h & 0x00ff0000) >> 16);
+		g = ((h & 0x0000ff00) >> 8);
+		b = ((h & 0x000000ff));
 	}
 
 	Color(const uint32_t color) {
-		r = ((color & 0xff000000) >> 24);
-		g = ((color & 0x00ff0000) >> 16);
-		b = ((color & 0x0000ff00) >> 8);
-		a = ((color & 0x000000ff));
+		a = ((color & 0xff000000) >> 24);
+		r = ((color & 0x00ff0000) >> 16);
+		g = ((color & 0x0000ff00) >> 8);
+		b = ((color & 0x000000ff));
 	}
 
 	Color(const Color &color) : r(color.r), g(color.g), b(color.b), a(color.a) {
@@ -83,10 +89,24 @@ struct Color {
 	}
 
 	void toFloat(float *r, float *g, float *b, float *a) {
-		*r = this->r;
-		*g = this->g;
-		*b = this->b;
-		*a = this->a;
+		*r = this->r/255.0f;
+		*g = this->g/255.0f;
+		*b = this->b/255.0f;
+		*a = this->a/255.0f;
+	}
+
+	void set(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+		this->r = r;
+		this->g = g;
+		this->b = b;
+		this->a = a;
+	}
+
+	void set(float r, float g, float b, float a) {
+		this->r = (uint8_t)(r*255.0f);
+		this->g = (uint8_t)(g*255.0f);
+		this->b = (uint8_t)(b*255.0f);
+		this->a = (uint8_t)(a*255.0f);
 	}
 
 	uint8_t r, g, b, a;

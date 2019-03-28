@@ -217,6 +217,18 @@ void LuaManager::onCreate() {
 				data.onPostUpdate = function(self, delta)
 				end
 			end
+			if not data.onPreRender then
+				data.onPreRender = function(self)
+				end
+			end
+			if not data.onRender then
+				data.onRender = function(self)
+				end
+			end
+			if not data.onPostRender then
+				data.onPostRender = function(self)
+				end
+			end
 			if not data.onDestroy then
 				data.onDestroy = function(self)
 				end

@@ -14,6 +14,7 @@ protected:
 	Application* getApp();
 	MainWindow* getWindow();
 	void exit();
+	void add(AppListener *listener);
 };
 
 #endif

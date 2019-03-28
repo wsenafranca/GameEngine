@@ -71,9 +71,18 @@ inline b2Mat4 b2LookAt(const b2Vec3& eye, const b2Vec3& target, const b2Vec3& up
 }
 
 inline b2Vec2 b2UnProject(const b2Vec2 &point, const b2Mat4 &projection, const b2Vec4 &viewport) {
-	b2Vec2 o;
-
-	return o;
+	static glm::vec3 p;
+	static glm::vec4 v;
+	static glm::mat4 m(1.0f);
+	p.x = point.x;
+	p.y = point.y;
+	p.z = 0.0f;
+	v.x = viewport.x;
+	v.y = viewport.y;
+	v.z = viewport.z;
+	v.w = viewport.w;
+	p = glm::unProject(p, m, projection, v);
+	return b2Vec2(p.x, p.y);
 }
 
 inline void b2Translate(b2Mat4 &M, const b2Vec2 &point) {
@@ -112,6 +121,14 @@ inline b2Mat4 b2CreateRotation(const b2Rot &rot) {
 	b2TmpVec3.z = 1.0f;
 	
 	return glm::rotate(b2TmpMat4, glm::degrees(rot.GetAngle()), b2TmpVec3);	
+}
+
+inline b2Mat4 b2CreateRotation(const float &radians) {
+	b2TmpVec3.x = 0.0f;
+	b2TmpVec3.y = 0.0f;
+	b2TmpVec3.z = 1.0f;
+	
+	return glm::rotate(b2TmpMat4, glm::degrees(radians), b2TmpVec3);	
 }
 
 inline b2Vec4 b2Mul(const b2Vec4 &v, const b2Mat4 &M) {

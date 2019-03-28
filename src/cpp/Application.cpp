@@ -3,6 +3,7 @@
 #include <Physics.h>
 #include <LuaManager.h>
 #include <RendererQueue.h>
+#include <LightManager.h>
 #include <AppDelegate.h>
 #include <algorithm>
 
@@ -11,6 +12,7 @@ Application::Application() {
 	addListener(DispatchQueue::main());
 	addListener(RendererQueue::instance());
 	addListener(Physics::instance());
+	addListener(LightManager::instance());
 }
 
 Application::~Application() {
@@ -57,9 +59,24 @@ void Application::update() {
 	}
 
 	mWindow->pollEvents();
-	glClear(GL_COLOR_BUFFER_BIT);
+	for(auto listener : listeners) {
+		listener->onPreUpdate(dt);
+	}
 	for(auto listener : listeners) {
 		listener->onUpdate(dt);
+	}
+	for(auto listener : listeners) {
+		listener->onPostUpdate(dt);
+	}
+	glClear(GL_COLOR_BUFFER_BIT);
+	for(auto listener : listeners) {
+		listener->onPreRender();
+	}
+	for(auto listener : listeners) {
+		listener->onRender();
+	}
+	for(auto listener : listeners) {
+		listener->onPostRender();
 	}
 	mWindow->swapBuffers();
 }

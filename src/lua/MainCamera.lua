@@ -11,7 +11,7 @@ MainCamera = Script {
 		if Input.isKeyPressed(81) then
 			zoom = zoom + 0.1
 		elseif Input.isKeyPressed(69) then
-			zoom = zoom - 0.1
+			zoom = math.max(zoom - 0.1, 0.1)
 		end
 		self.node.zoom = zoom
 

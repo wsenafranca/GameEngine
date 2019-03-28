@@ -1,32 +1,33 @@
 #version 330 core
-out vec4 FragColor;
 
-in vec2 f_texcoord;
+uniform sampler2D u_texture;
 
-uniform sampler2D u_image;
+uniform int isDiffuse;
 
-uniform bool u_horizontal;
-uniform float u_weight[5] = float[] (0.2270270270, 0.1945945946, 0.1216216216, 0.0540540541, 0.0162162162);
+in vec2 v_texCoords0;
+in vec2 v_texCoords1;
+in vec2 v_texCoords2;
+in vec2 v_texCoords3;
+in vec2 v_texCoords4;
 
-void main()
-{             
-     vec2 tex_offset = 1.0 / textureSize(u_image, 0); // gets size of single texel
-     vec3 result = texture(u_image, f_texcoord).rgb * u_weight[0];
-     if(u_horizontal)
-     {
-         for(int i = 1; i < 5; ++i)
-         {
-            result += texture(u_image, f_texcoord + vec2(tex_offset.x * i, 0.0)).rgb * u_weight[i];
-            result += texture(u_image, f_texcoord - vec2(tex_offset.x * i, 0.0)).rgb * u_weight[i];
-         }
-     }
-     else
-     {
-         for(int i = 1; i < 5; ++i)
-         {
-             result += texture(u_image, f_texcoord + vec2(0.0, tex_offset.y * i)).rgb * u_weight[i];
-             result += texture(u_image, f_texcoord - vec2(0.0, tex_offset.y * i)).rgb * u_weight[i];
-         }
-     }
-     FragColor = vec4(result, 1.0);
+const float center = 0.2270270270;
+const float close  = 0.3162162162;
+const float far    = 0.0702702703;
+
+void main() {
+    if(isDiffuse != 0) {
+        gl_FragColor.rgb =  far    * texture2D(u_texture, v_texCoords0).rgb + 
+                            close  * texture2D(u_texture, v_texCoords1).rgb + 
+                            center * texture2D(u_texture, v_texCoords2).rgb + 
+                            close  * texture2D(u_texture, v_texCoords3).rgb +
+                            far    * texture2D(u_texture, v_texCoords4).rgb;
+    }
+    else {
+        gl_FragColor =  far    * texture2D(u_texture, v_texCoords0) + 
+                        close  * texture2D(u_texture, v_texCoords1) + 
+                        center * texture2D(u_texture, v_texCoords2) + 
+                        close  * texture2D(u_texture, v_texCoords3) +
+                        far    * texture2D(u_texture, v_texCoords4);
+    }
+    
 }

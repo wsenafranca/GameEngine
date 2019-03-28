@@ -12,22 +12,20 @@ SpriteBatch::SpriteBatch(unsigned int size) {
 
 SpriteBatch::~SpriteBatch() {
 	free(vertices);
-	glDeleteBuffers(1, &vbo);
-	glDeleteBuffers(1, &ebo);
 	shader.destroy();
+	for(Light *light : lights) {
+		delete light;
+	}
 }
 
 void SpriteBatch::begin(const Camera &camera) {
 	shader.use();
+	glEnable(GL_BLEND);
 	glEnable(GL_TEXTURE_2D);
-	glActiveTexture(GL_TEXTURE0);
-	glUniformMatrix4fv(glGetUniformLocation(shader, "u_Projection"), 1, false, camera.getProjection());
-	glUniformMatrix4fv(glGetUniformLocation(shader, "u_View"), 1, false, camera.getView());
+	glUniformMatrix4fv(glGetUniformLocation(shader, "u_projTrans"), 1, false, camera.getCombined());
 }
 
 void SpriteBatch::draw(const TextureRegion &texture, float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4, bool flipX, bool flipY, const Color &color) {
-	glEnable(GL_BLEND);
-	glBlendFuncSeparate(getBlendFunc().src, getBlendFunc().dst, getBlendFunc().src, getBlendFunc().dst);
 	if(texture.texture != currentTexture) {
 		flush();
 		currentTexture = texture.texture;
@@ -91,13 +89,7 @@ void SpriteBatch::end() {
 	if(numVertices > 0) {
 		flush();
 	}
-
-	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
-	glDisable(GL_BLEND);
-	glBlendFuncSeparate(BlendFunc::ALPHA_NON_PREMULTIPLIED.src, BlendFunc::ALPHA_NON_PREMULTIPLIED.dst, 
-						BlendFunc::ALPHA_NON_PREMULTIPLIED.src, BlendFunc::ALPHA_NON_PREMULTIPLIED.dst);
 	currentTexture = 0;
 }
 
@@ -107,12 +99,14 @@ void SpriteBatch::init(unsigned int size) {
 	numObjects = 0;
 	currentTexture = 0;
 
-	vertices = (float*) malloc(sizeof(float)*maxVertices);
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float)*maxVertices, nullptr, GL_DYNAMIC_DRAW);
+	mesh.setAttribute(0, Mesh::Attribute{2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*5, (void*)0});
+	mesh.setAttribute(1, Mesh::Attribute{4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GLfloat)*5, (void*)(sizeof(GLfloat)*2)});
+	mesh.setAttribute(2, Mesh::Attribute{2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*5, (void*)(sizeof(GLfloat)*3)});
 
-	numIndices = size*6;
+	vertices = (float*) malloc(sizeof(float)*maxVertices);
+	mesh.setVertices(0, maxVertices, GL_DYNAMIC_DRAW);
+
+	unsigned int numIndices = size*6;
 	unsigned int *indices = (unsigned int*) malloc(sizeof(unsigned int)*numIndices);
 	for(int i = 0, j = 0; i < numIndices; i+=6, j+=4) {
 		indices[i    ] = j;
@@ -122,14 +116,8 @@ void SpriteBatch::init(unsigned int size) {
 		indices[i + 4] = (j + 3);
 		indices[i + 5] = j;
 	}
-	glGenBuffers(1, &ebo);
- 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
- 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices*sizeof(unsigned int), indices, GL_STATIC_DRAW);
+	mesh.setIndices(indices, numIndices, GL_STATIC_DRAW);
  	free(indices);
-
- 	glBindVertexArray(0);
- 	glBindBuffer(GL_ARRAY_BUFFER, 0);
- 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	shader.add("glsl/default.vert", GL_VERTEX_SHADER);
 	shader.add("glsl/default.frag", GL_FRAGMENT_SHADER);
@@ -138,33 +126,12 @@ void SpriteBatch::init(unsigned int size) {
 
 void SpriteBatch::flush() {
 	if(numVertices == 0) return;
+	glUniform1i(glGetUniformLocation(shader, "u_blur"), isBlur());
 	glBindTexture(GL_TEXTURE_2D, currentTexture ? *currentTexture : 0);
+	
+	mesh.updateVertices(vertices, numVertices);
+	mesh.renderElements(GL_TRIANGLES, 6*numObjects, GL_UNSIGNED_INT, 0);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
-
-	glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float)*numVertices, vertices);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*5, (void*)0);
-	glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(GLfloat)*5, (void*)(sizeof(GLfloat)*2));
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(GLfloat)*5, (void*)(sizeof(GLfloat)*3));
-
-	glVertexAttribDivisor(0, 0);
-	glVertexAttribDivisor(1, 0);
-	glVertexAttribDivisor(2, 0);
-
-	glDrawElements(GL_TRIANGLES, 6*numObjects, GL_UNSIGNED_INT, 0);
-
- 	glBindBuffer(GL_ARRAY_BUFFER, 0);
- 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	glDisableVertexAttribArray(0);
-	glDisableVertexAttribArray(1);
-	glDisableVertexAttribArray(2);
 	numVertices = 0;
 	numObjects = 0;
 }
-
