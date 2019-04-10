@@ -1,88 +1,174 @@
-#include <Application.h>
-#include <iostream>
-#include <fstream>
-#include <Scene.h>
-#include <TMXMap.h>
-#include <Camera.h>
-#include <LightManager.h>
+#include <app/application.hpp>
+#include <graphics/window.hpp>
+#include <math/math.hpp>
+#include <base/dispatch_queue.hpp>
+#include <graphics/camera.hpp>
+#include <nodes/sprite.hpp>
+#include <nodes/particle/system.hpp>
+#include <io/json.hpp>
+#include <graphics/shape_renderer.hpp>
+#include <physics/shapes/polygon.hpp>
+#include <physics/shapes/circle.hpp>
+#include <physics/world.hpp>
+#include <io/input.hpp>
+#include <debug/debug.hpp>
+#include <graphics/effects/lighting/point_light.hpp>
+#include <graphics/effects/lighting/directional_light.hpp>
+#include <graphics/effects/lighting/cone_light.hpp>
 
-class MyApplication : public AppDelegate {
-	void onCreate() override {
-		scene = new Scene();
+class delegate : public app::delegate {
+	void create() override {
+		world = physics::world::create();
+		current = nullptr;
 
-		scene->addNode(TMXMap::create("map1"));
-		add(scene);
+		create_platform(0.0f, -200.0f, 500, 100);
+		create_platform(0.0f, -125.0f, 100, 50);
+		create_platform(-225.0f, 150.0f, 50, 500);
+		//create_platform(50.0f, -150.0f, 150, 80, -30);
 
-		getWindow()->addMouseButtonListener([this](int button, int action, int mods, int x, int y){
-			if(action == GLFW_RELEASE) {
-				b2Vec2 pos = Camera::current()->unProject(x, 600-y);
-				Color c;
-				c.r = 100 + rand()%150;
-				c.g = 100 + rand()%150;
-				c.b = 100 + rand()%150;
-				c.a = 150 + rand()%50;
-				float dist = rand()%20 + 5;
-				if(button == 0) {
-					LightManager::instance()->createPointLight(10, c, dist, pos.x, pos.y);
-				}
-				else if(button == 1) {
-					auto player = scene->findNodeByName<Node>("player");
-					if(!player) return;
+		lighting = graphics::effects::lighting::renderer::create(world);
 
-					glm::vec2 v1 = glm::vec2(pos.x, pos.y);
-					glm::vec2 v2 = glm::vec2(player->getPosition().x, player->getPosition().y);
-					float dir = -glm::degrees(atan2(v1.y-v2.y, v2.x-v1.x));
-					LightManager::instance()->createConeLight(10, c, dist, pos.x, pos.y, dir, 45);
-				}
-			}
-		});
+        pulse_light = graphics::effects::lighting::point_light::create(lighting, 50, graphics::color::yellow, 150, -189, 148);
+        dir_light = graphics::effects::lighting::directional_light::create(lighting, 100, graphics::color(0.25f, 0.25f, 0.25f, 0.45f), math::radians(-45));
+        cone_light = graphics::effects::lighting::cone_light::create(lighting, 50, graphics::color::magenta, 300, 150, 90, glm::radians(255.0f), glm::radians(30.0f));
 
-		getWindow()->addKeyListener([this](int key, int scancode, int action, int mods) {
-			/*
-			printf("%d\n", key);
-			auto sprite = scene->findNode<Node>("Player");
-			if(action != 0 && key == GLFW_KEY_Q) {
-				camera.zoom()-=0.1f;
-			}
-			if(action != 0 && key == GLFW_KEY_E) {
-				camera.zoom()+=0.1f;
-			}
-			if(action != 0 && key == GLFW_KEY_W) {
-				sprite->position().y+=50.0f;
-			}
-			if(action != 0 && key == GLFW_KEY_S) {
-				sprite->position().y-=50.0f;
-			}
-			if(action != 0 && key == GLFW_KEY_A) {
-				sprite->position().x-=50.0f;
-			}
-			if(action != 0 && key == GLFW_KEY_D) {
-				sprite->position().x+=50.0f;
-			}
-			*/
-		});
-		
-
-		glShadeModel(GL_SMOOTH);
+        zoom = 1.0f;
+        graphics::camera::main->zoom(zoom);
 	}
 
-	void onUpdate(float delta) override {
+	void create_platform(float x, float y, float width, float height, float angle = 0.0f) {
+		physics::body::def def;
+		def.position.x = x;
+		def.position.y = y;
+		def.angle = math::radians(angle);
+		def.type = physics::body::type::static_body;
+		auto body = world->create_body(def);
+		physics::fixture::def fdef;
+		auto shape = new physics::shapes::polygon();
+		shape->rect(0, 0, width, height);
+		fdef.shape = shape;
+		body->create_fixture(fdef);
 	}
 
-	void onDestroy() override {
+	void update(float dt) override {
+		static float r = 60.0f;
+		r += dt;
+		if(r > 360) r -= 360;
+        dir_light->direction(math::radians(r));
+
+        static float d = 80.0f, s = 1.0f;
+        d += dt*s*5;
+        if(d > 100 || d < 80) s *= -1;
+        if(pulse_light) {
+            pulse_light->distance(d);
+        }
+
+        if(current && math::vector::distance(current->position(), cone_light->position()) <= cone_light->dist()) {
+            auto dir = math::atan2(current->position().y - cone_light->position().y, current->position().x - cone_light->position().x);
+            cone_light->direction(dir);
+        }
+
+		state += dt;
+		count_fps++;
+		if(state > 1.0f) {
+			state = 0.0f;
+			graphics::this_window::title(
+				title + 
+				std::string(" - FPS: ") + std::to_string(count_fps) +
+				std::string(" - Particles: " + std::to_string(world->body_count())) +
+				std::string(" - angle: " + std::to_string(r))
+				);
+			count_fps = 0;
+		}
+
+		world->update(dt);
+
+		if(io::input::mouse::triggered(0)) {
+			auto p = graphics::camera::main->unproject(io::input::mouse::position());
+			physics::body::def def;
+			def.position.x = p.x;
+			def.position.y = p.y;
+			def.type = physics::body::type::dynamic_body;
+			auto body = world->create_body(def);
+			physics::fixture::def fdef;
+			auto shape = new physics::shapes::circle();
+			shape->radius(16);
+			fdef.shape = shape;
+			body->create_fixture(fdef);
+			body->controller(new physics::controllers::controller2d());
+			current = body;
+		}
+		if(io::input::mouse::triggered(1)) {
+			auto p = graphics::camera::main->unproject(io::input::mouse::position());
+			graphics::effects::lighting::point_light::create(lighting, 50, graphics::color::red, 150, p.x, p.y);
+			printf("%f %f\n", p.x, p.y);
+		}
+
+        if(io::input::keyboard::pressed(GLFW_KEY_Q)) {
+            zoom+=dt;
+            graphics::camera::main->zoom(zoom);
+        }
+        else if(io::input::keyboard::pressed(GLFW_KEY_E)) {
+            zoom-=dt;
+            graphics::camera::main->zoom(zoom);
+        }
+
+		if(current) {
+			if(io::input::keyboard::pressed(GLFW_KEY_A)) {
+				current->move_left();
+			}
+			else if(io::input::keyboard::pressed(GLFW_KEY_D)) {
+				current->move_right();
+			}
+			if(io::input::keyboard::pressed(GLFW_KEY_W)) {
+				current->jump_input_down();
+			}
+			else if(io::input::keyboard::released(GLFW_KEY_W)) {
+				current->jump_input_up();
+			}
+		}
 	}
 
-	Scene *scene;
-	bool ready;
+	void render() override {
+		for(auto body = world->body_list(); body; body = body->next()) {
+			debug::draw(body, graphics::color::green);
+		}
+
+		debug::flush();
+
+		lighting->render();
+	}
+
+	void resized(int width, int height) override {
+		//batch->camera()->viewport(math::vec2(width, height));
+	}
+
+	void destroy() override {
+	    lighting = nullptr;
+	    world = nullptr;
+	}
+
+	float state;
+	int count_fps;
+	float zoom;
+	int num_particles;
+	std::string title;
+	base::pointer<nodes::sprite> sprite;
+	base::pointer<nodes::particle::system> particles;
+	base::pointer<nodes::particle::emitter> emitter;
+
+	base::pointer<physics::world> world;
+	physics::body* current;
+	base::pointer<graphics::effects::lighting::renderer> lighting;
+    base::pointer<graphics::effects::lighting::directional_light> dir_light;
+    base::pointer<graphics::effects::lighting::point_light> pulse_light;
+    base::pointer<graphics::effects::lighting::cone_light> cone_light;
 };
 
-int main() {
-	try {
-		Application::app()->setDelegate(new MyApplication());
-		Application::app()->exec();
-	} catch(const std::exception &e) {
-		std::cerr << "Error: " << e.what() << "\n";
-		return 1;
-	}
-	return 0;
+int main(int argc, char **argv) {
+	graphics::this_window::title(argv[0]);
+	graphics::this_window::resize(graphics::size(800, 600));
+
+	app::application app(new delegate);
+	return app.exec();
 }

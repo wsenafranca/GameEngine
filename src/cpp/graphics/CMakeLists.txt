@@ -1,0 +1,48 @@
+set(GRAPHICS_DIR 
+	${SRC_CPP_DIR}/graphics)
+
+set(GRAPHICS_HPP
+	${GRAPHICS_DIR}/batch.hpp
+	${GRAPHICS_DIR}/blend_func.hpp
+	${GRAPHICS_DIR}/camera.hpp
+	${GRAPHICS_DIR}/color.hpp
+	${GRAPHICS_DIR}/dimension.hpp
+	${GRAPHICS_DIR}/frame_buffer.hpp
+	${GRAPHICS_DIR}/effects/lighting/cone_light.hpp
+	${GRAPHICS_DIR}/effects/lighting/directional_light.hpp
+	${GRAPHICS_DIR}/effects/lighting/light.hpp
+	${GRAPHICS_DIR}/effects/lighting/point_light.hpp
+	${GRAPHICS_DIR}/effects/lighting/positional_light.hpp
+	${GRAPHICS_DIR}/effects/lighting/renderer.hpp
+	${GRAPHICS_DIR}/gl.hpp
+	${GRAPHICS_DIR}/mesh.hpp
+	${GRAPHICS_DIR}/render/queue.hpp
+	${GRAPHICS_DIR}/render/protocol.hpp
+	${GRAPHICS_DIR}/render/renderable.hpp
+	${GRAPHICS_DIR}/shader.hpp
+	${GRAPHICS_DIR}/shape_renderer.hpp
+	${GRAPHICS_DIR}/texture.hpp
+	${GRAPHICS_DIR}/vertex_data.hpp
+	${GRAPHICS_DIR}/window.hpp)
+
+set(GRAPHICS_CPP
+	${GRAPHICS_DIR}/batch.cpp
+	${GRAPHICS_DIR}/blend_func.cpp
+	${GRAPHICS_DIR}/camera.cpp
+	${GRAPHICS_DIR}/color.cpp
+	${GRAPHICS_DIR}/dimension.cpp
+	${GRAPHICS_DIR}/effects/lighting/cone_light.cpp
+	${GRAPHICS_DIR}/effects/lighting/directional_light.cpp
+	${GRAPHICS_DIR}/effects/lighting/light.cpp
+	${GRAPHICS_DIR}/effects/lighting/point_light.cpp
+	${GRAPHICS_DIR}/effects/lighting/positional_light.cpp
+	${GRAPHICS_DIR}/effects/lighting/renderer.cpp
+	${GRAPHICS_DIR}/frame_buffer.cpp
+	${GRAPHICS_DIR}/mesh.cpp
+	${GRAPHICS_DIR}/render/queue.cpp
+	${GRAPHICS_DIR}/render/renderable.cpp
+	${GRAPHICS_DIR}/shader.cpp
+	${GRAPHICS_DIR}/shape_renderer.cpp
+	${GRAPHICS_DIR}/texture.cpp
+	${GRAPHICS_DIR}/vertex_data.cpp
+	${GRAPHICS_DIR}/window.cpp)
