@@ -72,33 +72,33 @@ void particles::copy(unsigned int p1, unsigned int p2) {
 }
 
 particles::~particles() {
-	SAFE_FREE_ARRAY(posx);
-	SAFE_FREE_ARRAY(posy);
-	SAFE_FREE_ARRAY(start_posx);
-	SAFE_FREE_ARRAY(start_posy);
-	SAFE_FREE_ARRAY(color_r);
-	SAFE_FREE_ARRAY(color_g);
-	SAFE_FREE_ARRAY(color_b);
-	SAFE_FREE_ARRAY(color_a);
-	SAFE_FREE_ARRAY(delta_color_r);
-	SAFE_FREE_ARRAY(delta_color_g);
-	SAFE_FREE_ARRAY(delta_color_b);
-	SAFE_FREE_ARRAY(delta_color_a);
-	SAFE_FREE_ARRAY(size);
-	SAFE_FREE_ARRAY(delta_size);
-	SAFE_FREE_ARRAY(rotation);
-	SAFE_FREE_ARRAY(delta_rotation);
-	SAFE_FREE_ARRAY(time_to_live);
+	SAFE_DELETE_ARRAY(posx);
+	SAFE_DELETE_ARRAY(posy);
+	SAFE_DELETE_ARRAY(start_posx);
+	SAFE_DELETE_ARRAY(start_posy);
+	SAFE_DELETE_ARRAY(color_r);
+	SAFE_DELETE_ARRAY(color_g);
+	SAFE_DELETE_ARRAY(color_b);
+	SAFE_DELETE_ARRAY(color_a);
+	SAFE_DELETE_ARRAY(delta_color_r);
+	SAFE_DELETE_ARRAY(delta_color_g);
+	SAFE_DELETE_ARRAY(delta_color_b);
+	SAFE_DELETE_ARRAY(delta_color_a);
+	SAFE_DELETE_ARRAY(size);
+	SAFE_DELETE_ARRAY(delta_size);
+	SAFE_DELETE_ARRAY(rotation);
+	SAFE_DELETE_ARRAY(delta_rotation);
+	SAFE_DELETE_ARRAY(time_to_live);
 
-	SAFE_FREE_ARRAY(gravity_mode.dirx);
-	SAFE_FREE_ARRAY(gravity_mode.diry);
-	SAFE_FREE_ARRAY(gravity_mode.radial_accel);
-	SAFE_FREE_ARRAY(gravity_mode.tangential_accel);
+	SAFE_DELETE_ARRAY(gravity_mode.dirx);
+	SAFE_DELETE_ARRAY(gravity_mode.diry);
+	SAFE_DELETE_ARRAY(gravity_mode.radial_accel);
+	SAFE_DELETE_ARRAY(gravity_mode.tangential_accel);
 
-	SAFE_FREE_ARRAY(radius_mode.angle);
-	SAFE_FREE_ARRAY(radius_mode.degrees_per_second);
-	SAFE_FREE_ARRAY(radius_mode.delta_radius);
-	SAFE_FREE_ARRAY(radius_mode.radius);
+	SAFE_DELETE_ARRAY(radius_mode.angle);
+	SAFE_DELETE_ARRAY(radius_mode.degrees_per_second);
+	SAFE_DELETE_ARRAY(radius_mode.delta_radius);
+	SAFE_DELETE_ARRAY(radius_mode.radius);
 }
 
 }

@@ -13,8 +13,8 @@ graphics::effects::lighting::directional_light::directional_light() : start(null
 }
 
 graphics::effects::lighting::directional_light::~directional_light() {
-    SAFE_FREE_ARRAY(start)
-    SAFE_FREE_ARRAY(end)
+    SAFE_DELETE_ARRAY(start)
+    SAFE_DELETE_ARRAY(end)
 }
 
 void graphics::effects::lighting::directional_light::init(graphics::effects::lighting::renderer *handler, int rays,

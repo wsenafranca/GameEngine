@@ -6,8 +6,10 @@ set(BASE_HPP
 	${BASE_DIR}/clock.hpp
 	${BASE_DIR}/dictionary.hpp
 	${BASE_DIR}/dispatch_queue.hpp
+	${BASE_DIR}/macros.hpp
 	${BASE_DIR}/object.hpp
 	${BASE_DIR}/pointer.hpp
+	${BASE_DIR}/signal.hpp
 	${BASE_DIR}/state_machine.hpp)
 
 set(BASE_CPP

@@ -15,6 +15,8 @@ camera::camera(const math::vec2& position, const graphics::viewport& viewport) :
 {
 	update_view();
 	update_projection();
+
+	connect(&window::instance, window::instance.window_did_resize, this, &camera::on_window_did_resize);
 }
 
 void camera::position(const math::vec2 &p) {
@@ -89,5 +91,10 @@ math::vec2 camera::unproject(const math::vec2 &ps) const {
 		this_window::dimension().size.x, 
 		this_window::dimension().size.y);
 }
+
+void camera::on_window_did_resize(int width, int height) {
+    viewport(math::vec2((float)width, (float)height));
+}
+
 
 }

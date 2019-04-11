@@ -9,12 +9,16 @@
 #include <graphics/color.hpp>
 #include <graphics/dimension.hpp>
 #include <cl/environment.hpp>
+#include <base/signal.hpp>
 
 namespace graphics
 {
 
 class window {
-public:	
+public:
+    window(const window&) = delete;
+    window& operator=(const window&) = delete;
+
 	void create();
 	void refresh();
 	void swap_buffers();
@@ -50,17 +54,17 @@ public:
 
 	friend class cl::environment;
 
-	operator GLFWwindow*() {
+	explicit operator GLFWwindow*() {
 		return _window;
 	}
 
-	operator const GLFWwindow* const() {
+	explicit operator const GLFWwindow* const() {
 		return _window;
 	}
+
+	SIGNAL(window_did_resize, int, int);
 private:
 	window();
-	window(const window&) = delete;
-	window& operator=(const window&) = delete;
 	virtual ~window();
 	
 	static void callback_error(int error, const char* description);

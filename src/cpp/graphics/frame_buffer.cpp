@@ -51,7 +51,7 @@ frame_buffer::frame_buffer(const frame_buffer::builder& builder) : _fbo(0), _dep
 	glBindFramebuffer(GL_FRAMEBUFFER, _fbo);
 
 	for(size_t i = 0; i < builder.colors.size(); i++) {
-		auto texture = graphics::texture::create(std::to_string(_fbo)+"_color_"+std::to_string(i), builder.colors[i]);
+		auto texture = graphics::texture::create(builder.colors[i]);
         texture->min_filter(texture::filter::linear);
         texture->mag_filter(texture::filter::linear);
         texture->wrap_s(texture::wrap::clamp_to_edge);
@@ -65,7 +65,7 @@ frame_buffer::frame_buffer(const frame_buffer::builder& builder) : _fbo(0), _dep
 		glGenRenderbuffers(1, &_depth_rbo);
 		glBindRenderbuffer(GL_RENDERBUFFER, _depth_rbo);
 		glRenderbufferStorage(GL_RENDERBUFFER, (GLenum)builder.depth._internal_format, builder.depth._width, builder.depth._height);
-		auto texture = graphics::texture::create(std::to_string(_fbo)+"_depth", builder.depth);
+		auto texture = graphics::texture::create(builder.depth);
         texture->min_filter(texture::filter::linear);
         texture->mag_filter(texture::filter::linear);
         texture->wrap_s(texture::wrap::clamp_to_edge);
@@ -80,7 +80,7 @@ frame_buffer::frame_buffer(const frame_buffer::builder& builder) : _fbo(0), _dep
 		glGenRenderbuffers(1, &_stencil_rbo);
 		glBindRenderbuffer(GL_RENDERBUFFER, _stencil_rbo);
 		glRenderbufferStorage(GL_RENDERBUFFER, (GLenum)builder.stencil._internal_format, builder.stencil._width, builder.stencil._height);
-		auto texture = graphics::texture::create(std::to_string(_fbo)+"_stencil", builder.stencil);
+		auto texture = graphics::texture::create(builder.stencil);
         texture->min_filter(texture::filter::linear);
         texture->mag_filter(texture::filter::linear);
         texture->wrap_s(texture::wrap::clamp_to_edge);

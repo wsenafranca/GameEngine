@@ -8,6 +8,12 @@ object::object() : _use_count(0) {}
 
 object::~object() {
 	_pointers.clear();
+	for(auto& it : _slots) {
+	    auto& signal = it.first;
+	    for(auto& id : it.second) {
+	        signal->disconnect(id);
+	    }
+	}
 }
 
 const unsigned long& object::use_count() const {

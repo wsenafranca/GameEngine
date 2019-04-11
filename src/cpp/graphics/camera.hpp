@@ -28,6 +28,8 @@ public:
 	math::vec2 project(const math::vec2 &point) const;
 	math::vec2 unproject(const math::vec2 &point) const;
 
+	void on_window_did_resize(int width, int height);
+
 	static base::pointer<camera> main;
 protected:
 	camera(const math::vec2& position, const graphics::viewport& viewport);

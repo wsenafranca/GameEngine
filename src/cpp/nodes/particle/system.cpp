@@ -34,7 +34,7 @@ void system::build(const base::pointer<particle::emitter>& emitter) {
 	_emitter = emitter;
 	blend_func(_emitter->func);
 	particles = new particle::particles(_emitter->total_particles);
-	SAFE_FREE_ARRAY(_vertices);
+	SAFE_DELETE_ARRAY(_vertices);
 	_vertices = new graphics::vertex_data::particle[_emitter->total_particles];
 	protocol(graphics::batch::default_batch());
 	float s = _emitter->start_size + _emitter->start_size_var;
@@ -43,7 +43,7 @@ void system::build(const base::pointer<particle::emitter>& emitter) {
 }
 
 system::~system() {
-	SAFE_FREE_ARRAY(_vertices);
+	SAFE_DELETE_ARRAY(_vertices);
 }
 
 void system::update(float dt) {

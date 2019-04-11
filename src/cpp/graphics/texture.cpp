@@ -8,10 +8,6 @@ namespace graphics
 {
 
 base::pointer<texture::texture_t> texture::load(const filesystem::path& file) {
-	return load(texture::target::texture_2d, file);
-}
-
-base::pointer<texture::texture_t> texture::load(const texture::target &target, const filesystem::path& file) {
 	const std::string& filename = file.str();
 	if(!file.exists()) {
 		throw std::runtime_error("File " + filename + "not found.");
@@ -21,7 +17,7 @@ base::pointer<texture::texture_t> texture::load(const texture::target &target, c
 		int width, height, n;
 		unsigned char *data = stbi_load(filename.c_str(), &width, &height, &n, 4);
 		texture::builder builder;
-		builder._target = target;
+		builder._target = texture::target::texture_2d;
 		builder._level = 0;
 		builder._internal_format = internal_format::rgba;
 		builder._data = data;
@@ -49,6 +45,16 @@ base::pointer<texture::texture_t> texture::create(const std::string& name, const
 		texture->wrap_t(wrap::clamp);
 	}
 	return texture;
+}
+
+base::pointer<texture::texture_t> texture::create(const texture::builder &builder) {
+    auto texture = new texture_t("");
+    texture->load_to_gpu(builder);
+    texture->min_filter(filter::nearest);
+    texture->mag_filter(filter::nearest);
+    texture->wrap_s(wrap::clamp);
+    texture->wrap_t(wrap::clamp);
+    return texture;
 }
 
 texture::builder& texture::builder::target(const texture::target &target) {

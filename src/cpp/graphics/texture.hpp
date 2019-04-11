@@ -229,8 +229,8 @@ struct builder {
 class texture_t;
 
 base::pointer<texture_t> load(const filesystem::path& file);
-base::pointer<texture_t> load(const texture::target &target, const filesystem::path& file);
 base::pointer<texture_t> create(const std::string& name, const texture::builder &builder);
+base::pointer<texture_t> create(const texture::builder &builder);
 
 typedef base::pointer<texture_t> ref;
 
@@ -301,8 +301,9 @@ public:
 	bool operator==(const texture_t &t) const;
 	bool operator!=(const texture_t &t) const;
 
-	friend base::pointer<texture_t> texture::load(const texture::target &target, const filesystem::path& file);
+	friend base::pointer<texture_t> texture::load(const filesystem::path& file);
 	friend base::pointer<texture_t> texture::create(const std::string& name, const texture::builder &builder);
+    friend base::pointer<texture_t> texture::create(const texture::builder &builder);
 
 protected:
 	void load_to_gpu(const texture::builder &builder);

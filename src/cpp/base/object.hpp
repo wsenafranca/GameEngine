@@ -2,9 +2,9 @@
 #define BASE_OBJECT_HPP
 
 #include <unordered_set>
-
-#define SAFE_FREE(ptr) if(ptr) {delete ptr; ptr = nullptr;}
-#define SAFE_FREE_ARRAY(ptr) if(ptr) {delete[] ptr; ptr = nullptr;}
+#include "macros.hpp"
+#include "signal.hpp"
+#include <list>
 
 namespace base
 {
@@ -21,10 +21,19 @@ public:
 
 	const unsigned long& use_count() const;
 
+	template<class Sender, class ...Args, class Receiver>
+	static unsigned long connect(Sender* sender, signal_t<Args...>& signal, Receiver* receiver, void (Receiver::*slot)(Args...)) {
+	    auto id = signal.connect(receiver, slot);
+	    receiver->_slots[&signal].push_back(id);
+	    return id;
+	}
+
 	friend class base::pointer_t;
 private:
 	std::unordered_set<base::pointer_t*> _pointers;
 	unsigned long _use_count;
+
+	std::unordered_map<base::base_signal_t*, std::list<unsigned long> > _slots;
 };
 
 }//end namespace

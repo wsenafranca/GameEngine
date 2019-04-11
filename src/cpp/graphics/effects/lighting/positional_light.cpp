@@ -8,10 +8,10 @@ positional_light::positional_light() : s(nullptr), c(nullptr), end_x(nullptr), e
 }
 
 positional_light::~positional_light() {
-    SAFE_FREE_ARRAY(s)
-    SAFE_FREE_ARRAY(c)
-    SAFE_FREE_ARRAY(end_x)
-    SAFE_FREE_ARRAY(end_y)
+    SAFE_DELETE_ARRAY(s)
+    SAFE_DELETE_ARRAY(c)
+    SAFE_DELETE_ARRAY(end_x)
+    SAFE_DELETE_ARRAY(end_y)
 }
 
 void positional_light::init(renderer *handler, int rays, const graphics::color &color, float distance, float x, float y, float direction) {

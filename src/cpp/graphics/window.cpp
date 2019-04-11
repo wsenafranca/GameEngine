@@ -196,26 +196,28 @@ const bool& window::resizeable() const {
 
 void window::callback_error(int error, const char* description) {
 	static char buffer[512];
-	sprintf(buffer, "Error(%d): %s", description);
+	sprintf(buffer, "Error(%d): %s", error, description);
 	throw std::runtime_error(buffer);
 }
 
-void window::callback_resize(GLFWwindow* window, int width, int height) {
+void window::callback_resize(GLFWwindow*, int width, int height) {
+    glViewport(0, 0, width, height);
 	instance._dimension.size.x = width;
 	instance._dimension.size.y = height;
+	instance.window_did_resize.emit(width, height);
 	app::this_app::resized(width, height);
 }
 
-void window::callback_cursor_position(GLFWwindow* window, double x, double y) {
+void window::callback_cursor_position(GLFWwindow*, double x, double y) {
 	io::input::handler::mouse.pos.x = x;
 	io::input::handler::mouse.pos.y = y;
 }
 
-void window::callback_mouse(GLFWwindow* window, int button, int action, int mods) {
+void window::callback_mouse(GLFWwindow*, int button, int action, int mods) {
 	io::input::handler::mouse.set(button, action != GLFW_RELEASE);
 }
 
-void window::callback_keyboard(GLFWwindow* window, int key, int scancode, int action, int mods) {
+void window::callback_keyboard(GLFWwindow*, int key, int scancode, int action, int mods) {
 	io::input::handler::keyboard.set(key, action != GLFW_RELEASE);
 }
 
@@ -308,7 +310,7 @@ const bool& this_window::resizeable() {
 }
 
 GLFWwindow* this_window::glfw() {
-	return window::instance;
+	return (GLFWwindow*)window::instance;
 }
 
 }

@@ -25,7 +25,6 @@ class light;
 class renderer : public base::object {
 public:
 	static base::pointer<renderer> create(const base::pointer<physics::world>& world);
-	~renderer() override;
 	void render();
 
 	friend class lighting::light;
@@ -33,9 +32,10 @@ public:
     int light_rendered_last_frame;
     base::pointer<physics::world> _world;
     float x1, x2, y1, y2;
+
+    void resize(int width, int height);
 protected:
-	explicit renderer(const base::pointer<physics::world>& world);
-	void resize(unsigned int width, unsigned int height);
+	explicit renderer(base::pointer<physics::world>  world);
 
 private:
 	struct lightmap : public base::object {
@@ -57,8 +57,6 @@ private:
 	base::pointer<renderer::lightmap> _lightmap;
 	std::list< base::pointer<lighting::light> > _lights, _disabled_lights;
 	base::pointer<graphics::camera> _camera;
-
-	int viewport_x, viewport_y, viewport_width, viewport_height;
 
 	bool _shadow, _blur, _diffuse;
 	int _blur_num;

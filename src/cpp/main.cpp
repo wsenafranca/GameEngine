@@ -36,6 +36,11 @@ class delegate : public app::delegate {
         graphics::camera::main->zoom(zoom);
 	}
 
+	void on_test(int x, int y) {
+        printf("%d\n", x+y);
+	}
+
+
 	void create_platform(float x, float y, float width, float height, float angle = 0.0f) {
 		physics::body::def def;
 		def.position.x = x;
@@ -137,10 +142,6 @@ class delegate : public app::delegate {
 		debug::flush();
 
 		lighting->render();
-	}
-
-	void resized(int width, int height) override {
-		//batch->camera()->viewport(math::vec2(width, height));
 	}
 
 	void destroy() override {

@@ -103,24 +103,24 @@ inline mat4 rotate(const math::mat4 &m, const float &theta, const math::vec3f &v
 	return glm::rotate(m, theta, v);
 }
 
-inline vec2 project(const math::vec2 &pos, const math::mat4 &view, const math::mat4 &proj, const unsigned int &viewportWidth, const unsigned int &viewportHeight) {
+inline vec2 project(const math::vec2 &pos, const math::mat4 &view, const math::mat4 &proj, const float &viewportWidth, const float &viewportHeight) {
 	vec3::tmp.x = pos.x;
 	vec3::tmp.y = viewportHeight - pos.y;
 	vec3::tmp.z = 0.0f;
-	math::vec4f viewport(0, 0, (int)viewportWidth, (int)viewportHeight);
+	math::vec4f viewport(0, 0, viewportWidth, viewportHeight);
 	vec3::tmp = glm::project(vec3::tmp, view, proj, viewport);
 	return vec2(vec3::tmp.x, vec3::tmp.y);
 }
 
-inline vec2 unproject(const math::vec2 &pos, const math::mat4 &view, const math::mat4 &proj, const unsigned int &viewportWidth, const unsigned int &viewportHeight) {
+inline vec2 unproject(const math::vec2 &pos, const math::mat4 &view, const math::mat4 &proj, const float &viewportWidth, const float &viewportHeight) {
 	vec3::tmp.x = pos.x;
 	vec3::tmp.y = viewportHeight - pos.y;
 	vec3::tmp.z = 0.0f;
 
 	vec4f::tmp.x = 0;
 	vec4f::tmp.y = 0;
-	vec4f::tmp.z = (int)viewportWidth;
-	vec4f::tmp.w = (int)viewportHeight;
+	vec4f::tmp.z = viewportWidth;
+	vec4f::tmp.w = viewportHeight;
 	vec3::tmp = glm::unProject(vec3::tmp, view, proj, vec4f::tmp);
 	return vec2(vec3::tmp.x, vec3::tmp.y);
 }

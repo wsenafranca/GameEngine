@@ -27,10 +27,10 @@ light::light() :
 }
 
 light::~light() {
-	SAFE_FREE_ARRAY(segments)
-	SAFE_FREE_ARRAY(mx)
-	SAFE_FREE_ARRAY(my)
-	SAFE_FREE_ARRAY(f)
+	SAFE_DELETE_ARRAY(segments)
+	SAFE_DELETE_ARRAY(mx)
+	SAFE_DELETE_ARRAY(my)
+	SAFE_DELETE_ARRAY(f)
 }
 
 void light::init(renderer* handler_, int rays, const graphics::color& color, float distance, float direction) {
@@ -147,10 +147,10 @@ void light::ray_num(int rays) {
 	_ray_num = rays;
 	vertex_num = rays + 1;
 
-	SAFE_FREE_ARRAY(segments)
-	SAFE_FREE_ARRAY(mx)
-	SAFE_FREE_ARRAY(my)
-	SAFE_FREE_ARRAY(f)
+	SAFE_DELETE_ARRAY(segments)
+	SAFE_DELETE_ARRAY(mx)
+	SAFE_DELETE_ARRAY(my)
+	SAFE_DELETE_ARRAY(f)
 
 	segments = new float[vertex_num * 8];
 	mx = new float[vertex_num];

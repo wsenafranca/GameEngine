@@ -1,5 +1,7 @@
 #include <utility>
 
+#include <utility>
+
 #include "renderer.hpp"
 #include <graphics/window.hpp>
 #include "light.hpp"
@@ -11,10 +13,9 @@ base::pointer<renderer> renderer::create(const base::pointer<physics::world>& wo
 	return new renderer(world);
 }
 
-renderer::renderer(const base::pointer<physics::world>& world) :
-								_world(world),
+renderer::renderer(base::pointer<physics::world>  world) :
+								_world(std::move(world)),
 								_ambient(0.2f, 0.3f, 0.4f, 0.5f),
-								viewport_x(0), viewport_y(0), viewport_width(0), viewport_height(0),
 								x1(0), x2(0), y1(0), y2(0),
 								light_rendered_last_frame(0)
 {
@@ -55,9 +56,8 @@ renderer::renderer(const base::pointer<physics::world>& world) :
 
 	auto d = graphics::this_window::dimension();
 	resize((int)d.size.x, (int)d.size.y);
-}
 
-renderer::~renderer() {
+	connect(&graphics::window::instance, graphics::window::instance.window_did_resize, this, &renderer::resize);
 }
 
 void renderer::render() {
@@ -107,7 +107,7 @@ void renderer::render() {
 	_lightmap->render();
 }
 
-void renderer::resize(unsigned int width, unsigned int height) {
+void renderer::resize(int width, int height) {
 	_lightmap = new lightmap(this, width, height);
 }
 
